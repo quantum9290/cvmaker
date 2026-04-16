@@ -1,0 +1,3568 @@
+<!doctype html>
+<html lang="tr">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=1280">
+  <title>CV Builder</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Playfair+Display:wght@500;600;700&display=swap"
+    rel="stylesheet">
+  <script src="https://unpkg.com/pdfjs-dist@4.0.379/build/pdf.min.mjs" type="module"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+  <style>
+    :root {
+      --bg: #f3f5fa;
+      --bg2: #ffffff;
+      --bg3: #eef1f8;
+      --line: #d6dbe6;
+      --text: #1a1d26;
+      --muted: #5b6478;
+      --accent: #c8912a;
+      --accent2: #e0a738;
+      --good: #1f9d55;
+      --warn: #b67410;
+      --bad: #c53030;
+      --info: #2962c8;
+      --cv-accent: #c8912a;
+      --cv-font: 'DM Sans', sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0
+    }
+
+    html,
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased
+    }
+
+    button {
+      font-family: inherit;
+      cursor: pointer;
+      border: none;
+      background: none;
+      color: inherit
+    }
+
+    input,
+    select,
+    textarea {
+      font-family: inherit;
+      font-size: 14px;
+      color: var(--text);
+      background: var(--bg3);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 9px 12px;
+      outline: none;
+      width: 100%;
+      transition: border-color .15s
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus {
+      border-color: var(--accent)
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 90px;
+      font-family: inherit
+    }
+
+    h1,
+    h2,
+    h3,
+    h4 {
+      font-family: 'Playfair Display', serif;
+      font-weight: 600
+    }
+
+    ::-webkit-scrollbar {
+      width: 10px;
+      height: 10px
+    }
+
+    ::-webkit-scrollbar-track {
+      background: var(--bg)
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--bg3);
+      border-radius: 8px
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--line)
+    }
+
+    /* TOP BAR */
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: var(--bg2);
+      border-bottom: 1px solid var(--line);
+      padding: 10px 22px;
+      display: flex;
+      align-items: center;
+      gap: 18px
+    }
+
+    .brand {
+      font-family: 'Playfair Display', serif;
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--accent);
+      letter-spacing: .3px
+    }
+
+    .topbar .spacer {
+      flex: 1
+    }
+
+    .status-pill {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--bg3);
+      border: 1px solid var(--line);
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      color: var(--muted)
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--bad)
+    }
+
+    .status-pill.ok .status-dot {
+      background: var(--good);
+      box-shadow: 0 0 8px var(--good)
+    }
+
+    .status-pill.ok {
+      color: var(--good)
+    }
+
+    .btn {
+      padding: 9px 16px;
+      border-radius: 8px;
+      font-weight: 500;
+      font-size: 13px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all .15s;
+      border: 1px solid var(--line);
+      background: var(--bg3);
+      color: var(--text)
+    }
+
+    .btn:hover {
+      border-color: var(--accent);
+      color: var(--accent)
+    }
+
+    .btn.primary {
+      background: var(--accent);
+      color: #1a1a1a;
+      border-color: var(--accent);
+      font-weight: 600
+    }
+
+    .btn.primary:hover {
+      background: var(--accent2);
+      color: #1a1a1a
+    }
+
+    .btn.ai {
+      background: linear-gradient(135deg, #6b4ce6, #a878ff);
+      color: #fff;
+      border: none
+    }
+
+    .btn.ai:hover {
+      filter: brightness(1.15);
+      color: #fff
+    }
+
+    .btn.danger {
+      color: var(--bad);
+      border-color: var(--bad)
+    }
+
+    .btn.danger:hover {
+      background: var(--bad);
+      color: #fff
+    }
+
+    .btn:disabled {
+      opacity: .4;
+      cursor: not-allowed
+    }
+
+    .btn:disabled:hover {
+      border-color: var(--line);
+      color: var(--text)
+    }
+
+    .btn.ai[data-ai-blocked] {
+      opacity: .35;
+      pointer-events: none
+    }
+
+    .btn.ai[data-ai-blocked]::after {
+      content: " (AI meşgul)";
+      font-size: 10px;
+      opacity: .7
+    }
+
+    /* OLLAMA BANNER */
+    #ollama-banner {
+      display: none;
+      background: linear-gradient(90deg, #fde8ea, #fbd5d8);
+      border-bottom: 2px solid var(--bad);
+      padding: 14px 22px;
+      color: #5a1218
+    }
+
+    #ollama-banner.show {
+      display: block
+    }
+
+    #ollama-banner .b-title {
+      font-weight: 600;
+      color: var(--bad);
+      margin-bottom: 4px
+    }
+
+    #ollama-banner code {
+      background: rgba(0, 0, 0, .06);
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: #8a1e28
+    }
+
+    #ollama-banner .b-actions {
+      margin-top: 8px;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap
+    }
+
+    #ollama-banner .b-actions button {
+      padding: 6px 12px;
+      border-radius: 6px;
+      background: #fff;
+      border: 1px solid #f3b4ba;
+      color: #8a1e28;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer
+    }
+
+    #ollama-banner .b-actions button:hover {
+      background: #fbd5d8
+    }
+
+    /* LAYOUT */
+    .app {
+      display: grid;
+      grid-template-columns: minmax(700px, 1.45fr) minmax(460px, 0.8fr);
+      gap: 0;
+      height: calc(100vh - 60px)
+    }
+
+    .left {
+      border-right: 1px solid var(--line);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column
+    }
+
+    .right {
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      background: var(--bg)
+    }
+
+    /* TABS */
+    .tabs {
+      display: flex;
+      background: var(--bg2);
+      border-bottom: 1px solid var(--line);
+      overflow-x: auto;
+      flex-shrink: 0
+    }
+
+    .tabs::-webkit-scrollbar {
+      height: 0
+    }
+
+    .tab {
+      padding: 14px 18px;
+      font-size: 13px;
+      color: var(--muted);
+      border-bottom: 2px solid transparent;
+      white-space: nowrap;
+      transition: all .15s;
+      font-weight: 500
+    }
+
+    .tab:hover {
+      color: var(--text)
+    }
+
+    .tab.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent)
+    }
+
+    .tab .num {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      opacity: .6;
+      margin-right: 6px
+    }
+
+    .tab-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 24px 28px;
+      animation: fadeIn .25s
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(4px)
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0)
+      }
+    }
+
+    .tab-title {
+      font-size: 22px;
+      margin-bottom: 6px
+    }
+
+    .tab-sub {
+      color: var(--muted);
+      font-size: 13px;
+      margin-bottom: 22px
+    }
+
+    /* FORM */
+    .field {
+      margin-bottom: 16px
+    }
+
+    .field label {
+      display: block;
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 6px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: .5px
+    }
+
+    .field-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px
+    }
+
+    .field-row-3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 14px
+    }
+
+    .field-row .field,
+    .field-row-3 .field {
+      margin-bottom: 16px
+    }
+
+    .hint {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 4px
+    }
+
+    /* SEARCHABLE DROPDOWN */
+    .sdd {
+      position: relative
+    }
+
+    .sdd-input {
+      cursor: text
+    }
+
+    .sdd-menu {
+      position: absolute;
+      top: calc(100% + 4px);
+      left: 0;
+      right: 0;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      max-height: 240px;
+      overflow-y: auto;
+      z-index: 30;
+      display: none;
+      box-shadow: 0 10px 30px rgba(15, 30, 60, .12)
+    }
+
+    .sdd-menu.open {
+      display: block
+    }
+
+    .sdd-item {
+      padding: 9px 12px;
+      cursor: pointer;
+      font-size: 13px;
+      border-bottom: 1px solid var(--bg2)
+    }
+
+    .sdd-item:last-child {
+      border-bottom: none
+    }
+
+    .sdd-item:hover,
+    .sdd-item.hl {
+      background: var(--bg3);
+      color: var(--accent)
+    }
+
+    .sdd-item .meta {
+      font-size: 10px;
+      color: var(--muted);
+      margin-left: 6px
+    }
+
+    .sdd-empty {
+      padding: 14px;
+      color: var(--muted);
+      text-align: center;
+      font-size: 12px
+    }
+
+    /* CHIPS */
+    .chip-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      padding: 8px;
+      background: var(--bg3);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      min-height: 46px
+    }
+
+    .chip {
+      padding: 6px 12px;
+      border-radius: 16px;
+      background: var(--bg3);
+      border: 1px solid var(--line);
+      font-size: 12px;
+      color: var(--text);
+      cursor: pointer;
+      transition: all .15s;
+      user-select: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px
+    }
+
+    .chip:hover {
+      border-color: var(--accent)
+    }
+
+    .chip.active {
+      background: var(--accent);
+      color: #1a1a1a;
+      border-color: var(--accent);
+      font-weight: 600
+    }
+
+    .chip .x {
+      font-size: 14px;
+      line-height: 1;
+      opacity: .6
+    }
+
+    .chip:hover .x {
+      opacity: 1
+    }
+
+    /* CARDS */
+    .card {
+      background: var(--bg2);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 18px;
+      margin-bottom: 14px
+    }
+
+    .card-h {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px
+    }
+
+    .card-h h3 {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--accent)
+    }
+
+    .card-actions {
+      display: flex;
+      gap: 8px
+    }
+
+    .icon-btn {
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      background: var(--bg3);
+      border: 1px solid var(--line);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px
+    }
+
+    .icon-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent)
+    }
+
+    .icon-btn.del:hover {
+      border-color: var(--bad);
+      color: var(--bad)
+    }
+
+    .add-card {
+      width: 100%;
+      padding: 14px;
+      border: 1px dashed var(--line);
+      border-radius: 12px;
+      color: var(--muted);
+      font-size: 13px;
+      transition: all .15s;
+      background: transparent
+    }
+
+    .add-card:hover {
+      border-color: var(--accent);
+      color: var(--accent)
+    }
+
+    /* COLLAPSIBLE */
+    .collapsible {
+      margin-bottom: 12px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      overflow: hidden;
+      background: var(--bg2)
+    }
+
+    .collapsible-h {
+      padding: 13px 16px;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-weight: 500;
+      font-size: 13px;
+      background: var(--bg2)
+    }
+
+    .collapsible-h:hover {
+      background: var(--bg3)
+    }
+
+    .collapsible-h .arr {
+      transition: transform .2s;
+      color: var(--accent)
+    }
+
+    .collapsible.open .collapsible-h .arr {
+      transform: rotate(90deg)
+    }
+
+    .collapsible-body {
+      padding: 0 16px 16px;
+      display: none
+    }
+
+    .collapsible.open .collapsible-body {
+      display: block
+    }
+
+    .collapsible .count {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--accent);
+      background: rgba(232, 184, 75, .1);
+      padding: 2px 8px;
+      border-radius: 10px;
+      margin-left: 8px
+    }
+
+    /* DROP ZONE */
+    .dropzone {
+      border: 2px dashed var(--line);
+      border-radius: 14px;
+      padding: 40px 20px;
+      text-align: center;
+      color: var(--muted);
+      transition: all .2s;
+      background: var(--bg2);
+      cursor: pointer
+    }
+
+    .dropzone:hover,
+    .dropzone.drag {
+      border-color: var(--accent);
+      background: rgba(232, 184, 75, .05);
+      color: var(--accent)
+    }
+
+    .dropzone .ico {
+      font-size: 36px;
+      display: block;
+      margin-bottom: 10px
+    }
+
+    .cert-card {
+      display: grid;
+      grid-template-columns: 80px 1fr auto;
+      gap: 14px;
+      align-items: start;
+      background: var(--bg2);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 10px
+    }
+
+    .cert-thumb {
+      width: 80px;
+      height: 80px;
+      background: var(--bg3);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      font-size: 11px;
+      color: var(--muted)
+    }
+
+    .cert-thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover
+    }
+
+    .cert-info {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      min-width: 0
+    }
+
+    .cert-input {
+      background: var(--bg3);
+      border: 1px solid var(--line);
+      color: var(--text);
+      border-radius: 8px;
+      padding: 7px 10px;
+      font-size: 12px;
+      font-family: inherit;
+      outline: none;
+      transition: border-color .15s
+    }
+
+    .cert-input:focus {
+      border-color: var(--accent)
+    }
+
+    .cert-title {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      font-weight: 600
+    }
+
+    .cert-meta-row {
+      display: grid;
+      grid-template-columns: 1fr 90px 110px;
+      gap: 6px
+    }
+
+    .cert-summary {
+      font-size: 11px;
+      color: var(--muted);
+      line-height: 1.5
+    }
+
+    .cert-acts {
+      display: flex;
+      align-items: flex-start;
+      padding-top: 4px
+    }
+
+    .cert-info h4 {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      margin-bottom: 4px
+    }
+
+    .cert-info .org {
+      font-size: 12px;
+      color: var(--muted)
+    }
+
+    .cert-info .badges {
+      display: flex;
+      gap: 6px;
+      margin-top: 2px;
+      flex-wrap: wrap
+    }
+
+    .badge {
+      font-size: 10px;
+      padding: 3px 8px;
+      border-radius: 10px;
+      background: var(--bg3);
+      color: var(--muted);
+      font-family: 'JetBrains Mono', monospace
+    }
+
+    .badge.cat-Teknik {
+      background: rgba(95, 163, 255, .15);
+      color: var(--info)
+    }
+
+    .badge.cat-Dil {
+      background: rgba(95, 211, 138, .15);
+      color: var(--good)
+    }
+
+    .badge.cat-SoftSkill {
+      background: rgba(232, 184, 75, .15);
+      color: var(--accent)
+    }
+
+    .badge.cat-Kurs {
+      background: rgba(168, 120, 255, .15);
+      color: #a878ff
+    }
+
+    .badge.score {
+      background: rgba(232, 184, 75, .15);
+      color: var(--accent)
+    }
+
+    /* RIGHT PREVIEW */
+    .right-bar {
+      padding: 10px 16px;
+      background: var(--bg2);
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0
+    }
+
+    .right-bar select,
+    .right-bar .btn {
+      padding: 7px 12px;
+      font-size: 12px
+    }
+
+    .right-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 18px 14px;
+      display: flex;
+      justify-content: center
+    }
+
+    #cv-pages {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 24px
+    }
+
+    .cv-page-frame {
+      width: 210mm;
+      height: 297mm;
+      overflow: hidden;
+      position: relative;
+      background: #fff;
+      box-shadow: 0 8px 30px rgba(15, 30, 60, .12), 0 2px 6px rgba(15, 30, 60, .06);
+      flex-shrink: 0;
+      transform-origin: top center;
+    }
+
+    .cv-page-frame .cv-paper {
+      box-shadow: none;
+      min-height: auto;
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 210mm
+    }
+
+    .cv-page-num {
+      position: absolute;
+      bottom: 8px;
+      right: 12px;
+      font-size: 9px;
+      color: #999;
+      z-index: 5
+    }
+
+    .cv-paper {
+      width: 210mm;
+      min-height: 297mm;
+      background: #fff;
+      color: #1a1a1a;
+      padding: 50px 55px 50px 80px;
+      font-family: var(--cv-font);
+      font-size: 11px;
+      line-height: 1.55;
+      box-shadow: 0 8px 30px rgba(15, 30, 60, .12), 0 2px 6px rgba(15, 30, 60, .06);
+      position: relative;
+      border-left: 8px solid var(--cv-accent);
+      box-sizing: border-box !important;
+      /* Kenarlığı genişliğin içine hapseder */
+    }
+
+    .cv-name {
+      font-size: 30px;
+      font-weight: 700;
+      color: #1a1a1a;
+      line-height: 1.1;
+      margin-bottom: 6px;
+      letter-spacing: -.5px
+    }
+
+    .cv-target {
+      font-size: 13px;
+      color: var(--cv-accent);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      margin-bottom: 14px
+    }
+
+    .cv-contacts {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      font-size: 10.5px;
+      color: #444;
+      margin-bottom: 18px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid #ddd
+    }
+
+    .cv-contacts span {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px
+    }
+
+    .cv-section {
+      margin-bottom: 18px;
+      break-inside: avoid
+    }
+
+    .cv-section-title {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--cv-accent);
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin-bottom: 10px;
+      padding-bottom: 4px;
+      border-bottom: 1.5px solid var(--cv-accent)
+    }
+
+    .cv-entry {
+      margin-bottom: 11px;
+      break-inside: avoid
+    }
+
+    .cv-entry-h {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 3px;
+      align-items: baseline
+    }
+
+    .cv-entry-h h4 {
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 700;
+      color: #1a1a1a
+    }
+
+    .cv-entry-h .date {
+      font-size: 10px;
+      color: #666;
+      font-style: italic;
+      white-space: nowrap;
+      flex-shrink: 0;
+      text-align: right
+    }
+
+    .cv-entry-sub {
+      font-size: 11px;
+      color: #444;
+      font-style: italic;
+      margin-bottom: 4px
+    }
+
+    .cv-bullets {
+      list-style: none;
+      padding-left: 0;
+      margin-top: 4px
+    }
+
+    .cv-bullets li {
+      position: relative;
+      padding-left: 14px;
+      margin-bottom: 3px;
+      font-size: 10.5px;
+      color: #222
+    }
+
+    .cv-bullets li::before {
+      content: "▸";
+      position: absolute;
+      left: 0;
+      color: var(--cv-accent);
+      font-size: 10px
+    }
+
+    .cv-paper.en-template .cv-bullets li::before {
+      content: "—";
+      color: #1a1a1a
+    }
+
+    .cv-summary {
+      font-size: 11px;
+      color: #222;
+      text-align: justify;
+      line-height: 1.65
+    }
+
+    .cv-skills-grid {
+      display: grid;
+      grid-template-columns: 140px 1fr;
+      gap: 6px 12px;
+      font-size: 10.5px
+    }
+
+    .cv-skills-grid b {
+      color: #1a1a1a
+    }
+
+    .cv-empty {
+      text-align: center;
+      color: #aaa;
+      padding: 60px 20px;
+      font-style: italic;
+      font-size: 13px
+    }
+
+    .two-col .cv-section {
+      display: grid;
+      grid-template-columns: 150px 1fr;
+      gap: 24px;
+      align-items: start;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #eee;
+      margin-bottom: 16px
+    }
+
+    .two-col .cv-section:last-child {
+      border-bottom: none
+    }
+
+    .two-col .cv-section-title {
+      border-bottom: none;
+      padding-bottom: 0;
+      margin-bottom: 0;
+      text-align: left;
+      line-height: 1.3
+    }
+
+    .two-col .cv-section > *:not(.cv-section-title) {
+      min-width: 0
+    }
+
+    .two-col .cv-skills-grid {
+      grid-template-columns: 110px 1fr;
+      gap: 4px 10px
+    }
+
+    .two-col .cv-summary {
+      margin-top: 0
+    }
+
+    /* ATS */
+    .ats-widget {
+      display: flex;
+      align-items: center;
+      gap: 10px
+    }
+
+    .ats-ring {
+      width: 46px;
+      height: 46px;
+      position: relative
+    }
+
+    .ats-ring svg {
+      transform: rotate(-90deg)
+    }
+
+    .ats-ring .bg-c {
+      stroke: var(--bg3)
+    }
+
+    .ats-ring .fg-c {
+      stroke: var(--good);
+      transition: stroke-dashoffset .6s, stroke .3s
+    }
+
+    .ats-ring .num {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      font-weight: 600
+    }
+
+    .ats-label {
+      font-size: 10px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 1px
+    }
+
+    .ats-score {
+      font-size: 14px;
+      font-weight: 600
+    }
+
+    /* MODAL */
+    .modal-bg {
+      position: fixed;
+      inset: 0;
+      background: rgba(20, 28, 48, .45);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      backdrop-filter: blur(4px)
+    }
+
+    .modal-bg.open {
+      display: flex
+    }
+
+    .modal {
+      background: var(--bg2);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 28px;
+      width: 540px;
+      max-width: 90vw;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 20px 60px rgba(15, 30, 60, .18)
+    }
+
+    .modal h2 {
+      font-size: 20px;
+      margin-bottom: 16px;
+      color: var(--accent)
+    }
+
+    .modal .actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-top: 20px
+    }
+
+    /* TOAST */
+    #toast-stack {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 200;
+      display: flex;
+      flex-direction: column;
+      gap: 8px
+    }
+
+    .toast {
+      background: var(--bg2);
+      border: 1px solid var(--line);
+      border-left: 3px solid var(--accent);
+      padding: 12px 18px;
+      border-radius: 8px;
+      font-size: 13px;
+      box-shadow: 0 8px 30px rgba(15, 30, 60, .15);
+      animation: slideIn .3s;
+      min-width: 240px;
+      color: var(--text)
+    }
+
+    .toast.ok {
+      border-left-color: var(--good)
+    }
+
+    .toast.err {
+      border-left-color: var(--bad)
+    }
+
+    .toast.warn {
+      border-left-color: var(--warn)
+    }
+
+    @keyframes slideIn {
+      from {
+        transform: translateX(20px);
+        opacity: 0
+      }
+
+      to {
+        transform: translateX(0);
+        opacity: 1
+      }
+    }
+
+    /* SKELETON */
+    .skel {
+      background: linear-gradient(90deg, var(--bg3) 0%, var(--line) 50%, var(--bg3) 100%);
+      background-size: 200% 100%;
+      animation: shimmer 1.4s infinite;
+      border-radius: 6px;
+      height: 14px;
+      margin: 6px 0
+    }
+
+    @keyframes shimmer {
+      0% {
+        background-position: 200% 0
+      }
+
+      100% {
+        background-position: -200% 0
+      }
+    }
+
+    .thinking {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--accent);
+      font-size: 12px;
+      font-style: italic
+    }
+
+    .thinking::before {
+      content: "●";
+      animation: pulse 1s infinite
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        opacity: .3
+      }
+
+      50% {
+        opacity: 1
+      }
+    }
+
+    .summary-variant {
+      background: var(--bg2);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 16px;
+      margin-bottom: 10px
+    }
+
+    .summary-variant h4 {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 12px;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 8px
+    }
+
+    .summary-variant p {
+      font-size: 13px;
+      line-height: 1.6;
+      color: var(--text);
+      margin-bottom: 10px
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 14px
+    }
+
+    .skill-counter {
+      position: sticky;
+      top: 0;
+      background: var(--bg);
+      padding: 8px 0;
+      font-size: 12px;
+      color: var(--muted);
+      text-align: right;
+      z-index: 5
+    }
+
+    .skill-counter b {
+      color: var(--accent);
+      font-family: 'JetBrains Mono', monospace
+    }
+
+    .file-input {
+      display: none
+    }
+
+    /* PRINT */
+    @media print {
+      body {
+        background: #fff
+      }
+
+      .topbar,
+      .left,
+      .right-bar,
+      #ollama-banner,
+      #toast-stack,
+      .modal-bg,
+      #cv-pages {
+        display: none !important
+      }
+
+      .app {
+        display: block;
+        height: auto
+      }
+
+      .right {
+        background: #fff;
+        overflow: visible
+      }
+
+      .right-content {
+        padding: 0;
+        display: block;
+        overflow: visible
+      }
+
+      .cv-paper {
+        box-shadow: none;
+        width: 210mm;
+        min-height: 297mm;
+        padding: 30px 40px;
+        position: static !important;
+        left: auto !important;
+        top: auto !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        z-index: auto !important;
+        pointer-events: auto !important
+      }
+
+      .cv-section {
+        break-inside: avoid
+      }
+
+      .cv-entry {
+        break-inside: avoid
+      }
+
+      @page {
+        size: A4;
+        margin: 0
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div id="ollama-banner">
+    <div class="b-title">⚠ Ollama bağlantısı kurulamadı</div>
+    <div>Lütfen terminalde <code>ollama serve</code> komutunu çalıştırın. Model yoksa:
+      <code>ollama pull gemma4:e2b</code>
+    </div>
+    <div class="b-actions">
+      <button id="btn-ollama-diagnose">🔍 Tanılama Çalıştır</button>
+      <button id="btn-ollama-recheck">↻ Tekrar Dene</button>
+      <button id="btn-ollama-cors">📋 CORS Düzeltmesini Kopyala</button>
+    </div>
+  </div>
+
+  <div class="topbar">
+    <div class="brand">CV Builder</div>
+    <div id="ollama-status" class="status-pill">
+      <div class="status-dot"></div><span>Bağlanıyor...</span>
+    </div>
+    <div class="ats-widget">
+      <div class="ats-ring">
+        <svg width="46" height="46">
+          <circle class="bg-c" cx="23" cy="23" r="19" fill="none" stroke-width="4"></circle>
+          <circle class="fg-c" id="ats-circle" cx="23" cy="23" r="19" fill="none" stroke-width="4"
+            stroke-dasharray="119.4" stroke-dashoffset="119.4" stroke-linecap="round"></circle>
+        </svg>
+        <div class="num" id="ats-num">0</div>
+      </div>
+      <div>
+        <div class="ats-label">ATS Skoru</div>
+        <div class="ats-score" id="ats-text">Başlıyor</div>
+      </div>
+    </div>
+    <div class="spacer"></div>
+    <span id="save-status" style="font-size:11px;color:var(--muted)"></span>
+    <button class="btn ai" id="btn-analyze">⚡ CV'mi Analiz Et</button>
+    <button class="btn" id="btn-settings">⚙ Ayarlar</button>
+    <button class="btn primary" id="btn-print-tr">📄 TR PDF</button>
+    <button class="btn primary" id="btn-print-en">📄 EN PDF</button>
+  </div>
+
+  <div class="app">
+    <div class="left">
+      <div class="tabs" id="tabs"></div>
+      <div class="tab-content" id="tab-content"></div>
+    </div>
+    <div class="right">
+      <div class="right-bar">
+        <label style="font-size:11px;color:var(--muted)">Şablon:</label>
+        <select id="tpl-lang" style="width:auto">
+          <option value="tr">Türkçe</option>
+          <option value="en">İngilizce</option>
+          <option value="both">Her İkisi</option>
+        </select>
+        <select id="tpl-color" style="width:auto">
+          <option value="#e8b84b">Altın</option>
+          <option value="#5fa3ff">Mavi</option>
+          <option value="#5fd38a">Yeşil</option>
+          <option value="#a878ff">Mor</option>
+          <option value="#ef5d6f">Bordo</option>
+        </select>
+        <select id="tpl-font" style="width:auto">
+          <option value="DM Sans">DM Sans</option>
+          <option value="Inter">Inter</option>
+          <option value="Georgia">Georgia</option>
+        </select>
+        <select id="tpl-cols" style="width:auto">
+          <option value="1">Tek kolon</option>
+          <option value="2">İki kolon</option>
+        </select>
+        <div class="spacer" style="flex:1"></div>
+      </div>
+      <div class="right-content">
+        <div id="cv-pages"></div>
+        <div class="cv-paper" id="cv-preview"
+          style="opacity:0; position:absolute; pointer-events:none; z-index:-1; left:0; top:0;">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast-stack"></div>
+
+  <div class="modal-bg" id="modal-settings">
+    <div class="modal">
+      <h2>Ayarlar</h2>
+      <div class="field">
+        <label>Ollama URL</label>
+        <div style="display:flex;gap:8px"><input id="set-url" value="http://localhost:11434"><button class="btn"
+            id="set-test">Test</button></div>
+      </div>
+      <div class="field"><label>Model</label><select id="set-model"></select></div>
+      <div class="field"><label>Varsayılan Dil</label><select id="set-lang">
+          <option value="tr">Türkçe</option>
+          <option value="en">İngilizce</option>
+          <option value="both">Her İkisi</option>
+        </select></div>
+      <div class="field-row">
+        <button class="btn" id="set-export">📥 JSON Dışa Aktar</button>
+        <button class="btn" id="set-import">📤 JSON İçe Aktar</button>
+      </div>
+      <div class="field"><button class="btn danger" id="set-reset" style="width:100%">⚠ Tüm Veriyi Sıfırla</button>
+      </div>
+      <div class="actions"><button class="btn primary" onclick="closeModal('modal-settings')">Kapat</button></div>
+    </div>
+  </div>
+
+  <div class="modal-bg" id="modal-analyze">
+    <div class="modal">
+      <h2>AI CV Analizi</h2>
+      <div id="analyze-body">
+        <div class="thinking">Belge analiz ediliyor...</div>
+      </div>
+      <div class="actions"><button class="btn primary" onclick="closeModal('modal-analyze')">Kapat</button></div>
+    </div>
+  </div>
+
+  <div class="modal-bg" id="modal-diag">
+    <div class="modal">
+      <h2>Ollama Tanılama Raporu</h2>
+      <pre id="diag-output"
+        style="background:var(--bg3);padding:14px;border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text);white-space:pre-wrap;max-height:60vh;overflow:auto;border:1px solid var(--line)"></pre>
+      <div class="actions">
+        <button class="btn" id="diag-copy">📋 Kopyala</button>
+        <button class="btn primary" id="diag-close">Kapat</button>
+      </div>
+    </div>
+  </div>
+
+  <input type="file" id="json-import-file" class="file-input" accept=".json">
+
+  <script type="module">
+    // PDF.js worker setup
+    import * as pdfjs from "https://unpkg.com/pdfjs-dist@4.0.379/build/pdf.min.mjs";
+    pdfjs.GlobalWorkerOptions.workerSrc = "https://unpkg.com/pdfjs-dist@4.0.379/build/pdf.worker.min.mjs";
+    window.__pdfjs = pdfjs;
+  </script>
+
+  <script>
+    "use strict";
+    // =================== VERİ SABİTLERİ ===================
+    const TR_ILLERI = ["Adana", "Adıyaman", "Afyonkarahisar", "Ağrı", "Aksaray", "Amasya", "Ankara", "Antalya", "Ardahan", "Artvin", "Aydın", "Balıkesir", "Bartın", "Batman", "Bayburt", "Bilecik", "Bingöl", "Bitlis", "Bolu", "Burdur", "Bursa", "Çanakkale", "Çankırı", "Çorum", "Denizli", "Diyarbakır", "Düzce", "Edirne", "Elazığ", "Erzincan", "Erzurum", "Eskişehir", "Gaziantep", "Giresun", "Gümüşhane", "Hakkari", "Hatay", "Iğdır", "Isparta", "İstanbul", "İzmir", "Kahramanmaraş", "Karabük", "Karaman", "Kars", "Kastamonu", "Kayseri", "Kilis", "Kırıkkale", "Kırklareli", "Kırşehir", "Kocaeli", "Konya", "Kütahya", "Malatya", "Manisa", "Mardin", "Mersin", "Muğla", "Muş", "Nevşehir", "Niğde", "Ordu", "Osmaniye", "Rize", "Sakarya", "Samsun", "Şanlıurfa", "Siirt", "Sinop", "Sivas", "Şırnak", "Tekirdağ", "Tokat", "Trabzon", "Tunceli", "Uşak", "Van", "Yalova", "Yozgat", "Zonguldak"];
+    const AVRUPA_SEHIRLERI = ["Münih", "Berlin", "Hamburg", "Frankfurt", "Stuttgart", "Köln", "Düsseldorf", "Viyana", "Salzburg", "Zürih", "Cenevre", "Amsterdam", "Rotterdam", "Brüksel", "Paris", "Lyon", "Londra", "Manchester", "Madrid", "Barselona", "Milano", "Roma", "Stockholm", "Oslo", "Kopenhag", "Helsinki", "Prag", "Varşova", "Budapeşte", "Dublin", "Lizbon"];
+    const SEHIRLER = [...TR_ILLERI.map(c => ({ label: c, meta: "TR" })), ...AVRUPA_SEHIRLERI.map(c => ({ label: c, meta: "EU" }))];
+    const ULKELER = ["Türkiye", "Almanya", "Avusturya", "İsviçre", "Hollanda", "Belçika", "Fransa", "İngiltere", "İspanya", "İtalya", "İsveç", "Norveç", "Danimarka", "Finlandiya", "Çekya", "Polonya", "Macaristan", "İrlanda", "Portekiz", "ABD", "Kanada", "BAE", "Katar", "Suudi Arabistan", "Japonya", "Güney Kore", "Singapur", "Avustralya"];
+    const ULKE_KODLARI = [{ c: "+90", n: "Türkiye" }, { c: "+49", n: "Almanya" }, { c: "+43", n: "Avusturya" }, { c: "+41", n: "İsviçre" }, { c: "+31", n: "Hollanda" }, { c: "+32", n: "Belçika" }, { c: "+33", n: "Fransa" }, { c: "+44", n: "İngiltere" }, { c: "+34", n: "İspanya" }, { c: "+39", n: "İtalya" }, { c: "+46", n: "İsveç" }, { c: "+47", n: "Norveç" }, { c: "+45", n: "Danimarka" }, { c: "+358", n: "Finlandiya" }, { c: "+1", n: "ABD/CA" }, { c: "+971", n: "BAE" }, { c: "+974", n: "Katar" }, { c: "+966", n: "S.Arabistan" }, { c: "+81", n: "Japonya" }, { c: "+82", n: "G.Kore" }, { c: "+65", n: "Singapur" }];
+
+    const TR_UNIVERSITELERI = [
+      // Devlet
+      { n: "Boğaziçi Üniversitesi", t: "Devlet" }, { n: "Orta Doğu Teknik Üniversitesi", t: "Devlet" }, { n: "İstanbul Teknik Üniversitesi", t: "Devlet" }, { n: "Hacettepe Üniversitesi", t: "Devlet" }, { n: "Ankara Üniversitesi", t: "Devlet" }, { n: "İstanbul Üniversitesi", t: "Devlet" }, { n: "Yıldız Teknik Üniversitesi", t: "Devlet" }, { n: "Gazi Üniversitesi", t: "Devlet" }, { n: "Ege Üniversitesi", t: "Devlet" }, { n: "Dokuz Eylül Üniversitesi", t: "Devlet" }, { n: "Marmara Üniversitesi", t: "Devlet" }, { n: "Anadolu Üniversitesi", t: "Devlet" }, { n: "Karadeniz Teknik Üniversitesi", t: "Devlet" }, { n: "Çukurova Üniversitesi", t: "Devlet" }, { n: "Selçuk Üniversitesi", t: "Devlet" }, { n: "Akdeniz Üniversitesi", t: "Devlet" }, { n: "Uludağ Üniversitesi", t: "Devlet" }, { n: "Sakarya Üniversitesi", t: "Devlet" }, { n: "Eskişehir Osmangazi Üniversitesi", t: "Devlet" }, { n: "Erciyes Üniversitesi", t: "Devlet" }, { n: "Atatürk Üniversitesi", t: "Devlet" }, { n: "Süleyman Demirel Üniversitesi", t: "Devlet" }, { n: "Pamukkale Üniversitesi", t: "Devlet" }, { n: "Balıkesir Üniversitesi", t: "Devlet" }, { n: "Kocaeli Üniversitesi", t: "Devlet" }, { n: "Trakya Üniversitesi", t: "Devlet" }, { n: "Mersin Üniversitesi", t: "Devlet" }, { n: "Çanakkale Onsekiz Mart Üniversitesi", t: "Devlet" }, { n: "Gaziantep Üniversitesi", t: "Devlet" }, { n: "İnönü Üniversitesi", t: "Devlet" }, { n: "Fırat Üniversitesi", t: "Devlet" }, { n: "Dicle Üniversitesi", t: "Devlet" }, { n: "Karabük Üniversitesi", t: "Devlet" }, { n: "Bursa Teknik Üniversitesi", t: "Devlet" }, { n: "İzmir Yüksek Teknoloji Enstitüsü", t: "Devlet" }, { n: "Gebze Teknik Üniversitesi", t: "Devlet" }, { n: "Mimar Sinan Güzel Sanatlar Üniversitesi", t: "Devlet" }, { n: "Yıldırım Beyazıt Üniversitesi", t: "Devlet" }, { n: "Kırıkkale Üniversitesi", t: "Devlet" }, { n: "Düzce Üniversitesi", t: "Devlet" }, { n: "Ondokuz Mayıs Üniversitesi", t: "Devlet" }, { n: "Manisa Celal Bayar Üniversitesi", t: "Devlet" }, { n: "Aydın Adnan Menderes Üniversitesi", t: "Devlet" }, { n: "Niğde Ömer Halisdemir Üniversitesi", t: "Devlet" }, { n: "Bilecik Şeyh Edebali Üniversitesi", t: "Devlet" }, { n: "Yozgat Bozok Üniversitesi", t: "Devlet" }, { n: "Tokat Gaziosmanpaşa Üniversitesi", t: "Devlet" },
+      // Vakıf
+      { n: "Bilkent Üniversitesi", t: "Vakıf" }, { n: "Koç Üniversitesi", t: "Vakıf" }, { n: "Sabancı Üniversitesi", t: "Vakıf" }, { n: "TOBB Ekonomi ve Teknoloji Üniversitesi", t: "Vakıf" }, { n: "Özyeğin Üniversitesi", t: "Vakıf" }, { n: "Bahçeşehir Üniversitesi", t: "Vakıf" }, { n: "İstanbul Bilgi Üniversitesi", t: "Vakıf" }, { n: "Yeditepe Üniversitesi", t: "Vakıf" }, { n: "Kadir Has Üniversitesi", t: "Vakıf" }, { n: "İstanbul Kültür Üniversitesi", t: "Vakıf" }, { n: "İstanbul Aydın Üniversitesi", t: "Vakıf" }, { n: "İstanbul Medipol Üniversitesi", t: "Vakıf" }, { n: "İstinye Üniversitesi", t: "Vakıf" }, { n: "Atılım Üniversitesi", t: "Vakıf" }, { n: "Çankaya Üniversitesi", t: "Vakıf" }, { n: "Başkent Üniversitesi", t: "Vakıf" }, { n: "İzmir Ekonomi Üniversitesi", t: "Vakıf" }, { n: "Yaşar Üniversitesi", t: "Vakıf" }, { n: "Türk Hava Kurumu Üniversitesi", t: "Vakıf" }, { n: "MEF Üniversitesi", t: "Vakıf" }
+    ].sort((a, b) => a.n.localeCompare(b.n, "tr", { sensitivity: "base" }));
+
+    const _trSort = (a, b) => String(a).localeCompare(String(b), "tr", { sensitivity: "base" });
+
+    const BOLUMLER_BY_DERECE = {
+      "Lise": [
+        "Anadolu Lisesi", "Endüstri Meslek Lisesi", "Fen Lisesi", "İmam Hatip Lisesi", "Meslek Lisesi - Bilgisayar", "Meslek Lisesi - Bilişim Teknolojileri", "Meslek Lisesi - Elektrik-Elektronik", "Meslek Lisesi - Endüstriyel Otomasyon", "Meslek Lisesi - Makine Teknolojisi", "Meslek Lisesi - Mekatronik", "Sosyal Bilimler Lisesi", "Spor Lisesi", "Teknik Lise"
+      ].sort(_trSort),
+      "Ön Lisans": [
+        "Bilgisayar Programcılığı", "Biyomedikal Cihaz Teknolojisi", "Elektrik", "Elektronik Haberleşme Teknolojisi", "Elektronik Teknolojisi", "Endüstriyel Otomasyon Teknolojisi", "Gıda Teknolojisi", "Harita ve Kadastro", "İklimlendirme ve Soğutma Teknolojisi", "İnşaat Teknolojisi", "İş Sağlığı ve Güvenliği", "Kontrol ve Otomasyon Teknolojisi", "Lojistik", "Makine", "Mekatronik", "Otomotiv Teknolojisi", "Tıbbi Görüntüleme Teknikleri", "Web Tasarımı ve Kodlama"
+      ].sort(_trSort),
+      "Lisans": [
+        "Bilgisayar Mühendisliği", "Biyomedikal Mühendisliği", "Çevre Mühendisliği", "Ekonomi", "Elektrik Mühendisliği", "Elektrik-Elektronik Mühendisliği", "Elektronik Mühendisliği", "Elektronik ve Haberleşme Mühendisliği", "Endüstri Mühendisliği", "Endüstriyel Tasarım Mühendisliği", "Enerji Sistemleri Mühendisliği", "Fizik", "Fizik Mühendisliği", "Gemi İnşaatı ve Gemi Makineleri Mühendisliği", "Gıda Mühendisliği", "Gömülü Sistemler", "Harita Mühendisliği", "Havacılık ve Uzay Mühendisliği", "İnşaat Mühendisliği", "İstatistik", "İşletme", "İşletme Mühendisliği", "Jeofizik Mühendisliği", "Jeoloji Mühendisliği", "Kimya", "Kimya Mühendisliği", "Kontrol ve Otomasyon Mühendisliği", "Maden Mühendisliği", "Makine Mühendisliği", "Malzeme Mühendisliği", "Matematik", "Matematik Mühendisliği", "Mekatronik Mühendisliği", "Metalurji ve Malzeme Mühendisliği", "Meteoroloji Mühendisliği", "Mikro ve Nanoteknoloji Mühendisliği", "Nükleer Enerji Mühendisliği", "Otomotiv Mühendisliği", "Petrol ve Doğalgaz Mühendisliği", "Tarım Makineleri ve Teknolojileri Mühendisliği", "Telekomünikasyon Mühendisliği", "Tekstil Mühendisliği", "Uçak Mühendisliği", "Uzay Mühendisliği", "Veri Bilimi ve Analitik", "Yapay Zeka Mühendisliği", "Yazılım Mühendisliği"
+      ].sort(_trSort),
+      "Yüksek Lisans": [
+        "Bilgisayar Mühendisliği (YL)", "Biyomedikal Mühendisliği (YL)", "Elektrik-Elektronik Mühendisliği (YL)", "Elektronik Mühendisliği (YL)", "Elektronik ve Haberleşme Mühendisliği (YL)", "Endüstri Mühendisliği (YL)", "Enerji Sistemleri Mühendisliği (YL)", "Gömülü Sistemler (YL)", "Güç Elektroniği ve Sistemleri (YL)", "Havacılık ve Uzay Mühendisliği (YL)", "Kontrol ve Otomasyon Mühendisliği (YL)", "Makine Mühendisliği (YL)", "Malzeme Bilimi ve Mühendisliği (YL)", "MBA / İşletme (YL)", "Mekatronik Mühendisliği (YL)", "Mikrodalga ve RF Mühendisliği (YL)", "Mikroelektronik (YL)", "Robotik ve Otomasyon (YL)", "Savunma Teknolojileri (YL)", "Sinyal İşleme (YL)", "Sistem Mühendisliği (YL)", "Telekomünikasyon Mühendisliği (YL)", "Veri Bilimi (YL)", "Yapay Zeka ve Veri Mühendisliği (YL)", "Yazılım Mühendisliği (YL)"
+      ].sort(_trSort),
+      "Doktora": [
+        "Bilgisayar Mühendisliği (Dr)", "Elektrik-Elektronik Mühendisliği (Dr)", "Elektronik Mühendisliği (Dr)", "Endüstri Mühendisliği (Dr)", "Enerji Mühendisliği (Dr)", "Fizik (Dr)", "Gömülü Sistemler (Dr)", "Havacılık ve Uzay Mühendisliği (Dr)", "Kontrol ve Otomasyon Mühendisliği (Dr)", "Makine Mühendisliği (Dr)", "Matematik (Dr)", "Mekatronik Mühendisliği (Dr)", "Robotik (Dr)", "Sinyal İşleme (Dr)", "Sistem Mühendisliği (Dr)", "Telekomünikasyon Mühendisliği (Dr)", "Veri Bilimi (Dr)", "Yapay Zeka (Dr)", "Yazılım Mühendisliği (Dr)"
+      ].sort(_trSort)
+    };
+    const BOLUMLER = BOLUMLER_BY_DERECE["Lisans"];
+
+    const BOLUM_DERSLERI = {
+      "Elektrik-Elektronik Mühendisliği": ["Devre Analizi I", "Devre Analizi II", "Elektronik I", "Elektronik II", "Elektromanyetik Alan Teorisi", "Sayısal Tasarım", "Mikroişlemciler", "Gömülü Sistemler", "Sinyaller ve Sistemler", "Kontrol Sistemleri", "Güç Sistemleri", "Güç Elektroniği", "Yüksek Gerilim Tekniği", "Elektrik Makineleri", "Sayısal Sinyal İşleme", "Haberleşme Sistemleri", "RF ve Mikrodalga", "Sensörler ve Transdüserler", "FPGA Tasarımı", "VLSI Tasarımı", "Robotik", "Olasılık ve İstatistik", "Mühendislik Matematiği", "Diferansiyel Denklemler", "Fizik I", "Fizik II"],
+      "Bilgisayar Mühendisliği": ["Veri Yapıları", "Algoritmalar", "Nesne Yönelimli Programlama", "Veri Tabanı Sistemleri", "İşletim Sistemleri", "Bilgisayar Ağları", "Yazılım Mühendisliği", "Yapay Zeka", "Makine Öğrenmesi", "Derleyici Tasarımı", "Bilgisayar Grafikleri", "Web Programlama", "Mobil Uygulama Geliştirme", "Bilgi Güvenliği", "Bulut Bilişim", "Sayısal Mantık", "Mikroişlemciler", "Olasılık ve İstatistik", "Ayrık Matematik"],
+      "Yazılım Mühendisliği": ["Veri Yapıları", "Algoritmalar", "Yazılım Mimarisi", "Yazılım Test", "DevOps", "Veritabanı", "Web Teknolojileri", "Mobil Geliştirme", "Bulut Bilişim", "Mikroservisler", "Agile Yöntemler", "UI/UX", "Yapay Zeka", "Makine Öğrenmesi"],
+      "Makine Mühendisliği": ["Statik", "Dinamik", "Mukavemet", "Termodinamik", "Akışkanlar Mekaniği", "Isı Transferi", "Makine Elemanları", "CAD", "CAM", "Üretim Yöntemleri", "Otomasyon", "Robotik", "Malzeme Bilimi", "Mekatronik"],
+      "Mekatronik Mühendisliği": ["Devre Analizi", "Sensörler", "Aktüatörler", "Kontrol Sistemleri", "Robotik", "PLC Programlama", "Endüstriyel Otomasyon", "Mikroişlemciler", "Gömülü Sistemler", "Görüntü İşleme", "CAD", "Makine Elemanları"],
+      "Endüstri Mühendisliği": ["Üretim Planlama", "Yöneylem Araştırması", "Kalite Kontrol", "Tedarik Zinciri", "Ergonomi", "Simülasyon", "İstatistik", "Ekonomi", "Proje Yönetimi", "Yalın Üretim"]
+    };
+
+    const HEDEF_POZISYONLAR = [
+      "AR-GE Mühendisi", "AR-GE Stajyeri", "Akademisyen", "Akıllı Sistemler Mühendisi", "Analog Devre Tasarım Mühendisi", "Araştırma Asistanı", "Aydınlatma Tasarım Mühendisi",
+      "Bakım Mühendisi", "Bakım Planlama Mühendisi", "Bare-metal Yazılım Mühendisi", "Backend Geliştirici", "Bilgisayar Donanım Mühendisi", "Bilgisayar Mühendisi", "Bilgisayarlı Görü Mühendisi", "Biyomedikal Cihaz Mühendisi", "Biyomedikal Mühendisi", "Blockchain Geliştirici", "Bootloader Mühendisi", "BSP Mühendisi", "Bulut Mimarı", "Bulut Yazılım Mühendisi", "Büyük Veri Mühendisi",
+      "C++ Geliştirici", "CAD Tasarım Mühendisi", "CFD Mühendisi", "Çevre Mühendisi", "Çevresel Test Mühendisi",
+      "DCS Mühendisi", "Derin Öğrenme Mühendisi", "DevOps Mühendisi", "Devreye Alma Mühendisi", "Dijital Tasarım Mühendisi", "Doğal Dil İşleme Mühendisi", "Donanım Doğrulama Mühendisi", "Donanım Mühendisi", "Donanım Tasarım Mühendisi", "Donanım Test Mühendisi", "DSP Yazılım Mühendisi",
+      "Elektrik Bakım Mühendisi", "Elektrik Mühendisi", "Elektrik Tasarım Mühendisi", "Elektrik-Elektronik Mühendisi", "Elektronik Donanım Mühendisi", "Elektronik Mühendisi", "Elektronik Tasarım Mühendisi", "EMC Test Mühendisi", "Endüstri 4.0 Mühendisi", "Endüstri Mühendisi", "Endüstriyel Otomasyon Mühendisi", "Enerji Mühendisi", "Enerji Sistemleri Mühendisi", "Enerji Verimliliği Mühendisi", "ERP Uzmanı", "Etik Hacker",
+      "Firmware Mühendisi", "FPGA Doğrulama Mühendisi", "FPGA Tasarım Mühendisi", "Frontend Geliştirici", "Full-Stack Geliştirici",
+      "Game Developer", "Genetik Algoritma Mühendisi", "Gömülü C++ Mühendisi", "Gömülü Linux Mühendisi", "Gömülü Sistem Mühendisi", "Gömülü Yazılım Mühendisi", "Görüntü İşleme Mühendisi", "Güç Elektroniği Mühendisi", "Güç Sistemleri Mühendisi", "Güvenilirlik Mühendisi",
+      "Haberleşme Mühendisi", "Havacılık Mühendisi", "HIL Test Mühendisi", "HMI Tasarım Mühendisi", "HVAC Kontrol Mühendisi",
+      "IoT Çözüm Mimarı", "IoT Donanım Mühendisi", "IoT Yazılım Mühendisi", "İnşaat Mühendisi", "İş Analisti", "İş Sağlığı ve Güvenliği Uzmanı", "İş Zekası Uzmanı",
+      "Java Geliştirici", "Junior Backend Geliştirici", "Junior Donanım Mühendisi", "Junior Firmware Mühendisi", "Junior Frontend Geliştirici", "Junior Gömülü Yazılım Mühendisi", "Junior Yazılım Geliştirici",
+      "Kalibrasyon Mühendisi", "Kalite Güvence Mühendisi", "Kalite Kontrol Mühendisi", "Kalite Mühendisi", "Kıdemli Backend Geliştirici", "Kıdemli Donanım Mühendisi", "Kıdemli Firmware Mühendisi", "Kıdemli Frontend Geliştirici", "Kıdemli Gömülü Yazılım Mühendisi", "Kıdemli Yazılım Mühendisi", "Kimya Mühendisi", "Kontrol Sistemleri Mühendisi", "Koruma ve Röle Mühendisi", "Kriptografi Uzmanı",
+      "LabVIEW Mühendisi", "Lojistik Mühendisi",
+      "Maden Mühendisi", "Makine Mühendisi", "Makine Öğrenmesi Mühendisi", "Malzeme Mühendisi", "Matematik Mühendisi", "Mekanik Bakım Mühendisi", "Mekanik Tasarım Mühendisi", "Mekatronik Mühendisi", "Metalurji Mühendisi", "Mikrodenetleyici Yazılım Mühendisi", "Mikroelektronik Mühendisi", "MLOps Mühendisi", "Mobil Uygulama Geliştirici", "Motor Tasarım Mühendisi",
+      "Nükleer Mühendis",
+      "Ölçü ve Kumanda Mühendisi", "Otomasyon Mühendisi", "Otomotiv Mühendisi", "Otonom Sistemler Mühendisi", "Oyun Geliştirici",
+      "Pano Tasarım Mühendisi", "Patent Mühendisi", "PCB Tasarım Mühendisi", "Petrol Mühendisi", "PLC Programcısı", "Proje Mühendisi", "Proje Yöneticisi", "Proses Kontrol Mühendisi", "Python Geliştirici",
+      "React Geliştirici", "RF Mühendisi", "RF/Mikrodalga Mühendisi", "Robotik Mühendisi", "RTOS Mühendisi",
+      "Site Reliability Engineer (SRE)", "SoC Tasarım Mühendisi",
+      "AR-GE Stajyeri", "Ağ Stajyeri", "Android Geliştirici Stajyeri", "Backend Geliştirici Stajyeri", "Bakım Stajyeri", "Bilgisayar Mühendisliği Stajyeri", "Biyomedikal Stajyeri", "Bulut Stajyeri", "CNC Stajyeri", "Çevre Stajyeri", "Danışmanlık Stajyeri", "Data Stajyeri", "DevOps Stajyeri", "Donanım Tasarım Stajyeri", "Elektrik Bakım Stajyeri", "Elektrik Stajyeri", "Elektrik-Elektronik Stajyeri", "Elektronik Stajyeri", "Endüstri Mühendisliği Stajyeri", "Enerji Stajyeri", "Finans Stajyeri", "FPGA/VHDL Stajyeri", "Frontend Geliştirici Stajyeri", "Full-Stack Geliştirici Stajyeri", "Gömülü Yazılım Stajyeri", "Güç Elektroniği Stajyeri", "Haberleşme Stajyeri", "Harita Mühendisliği Stajyeri", "Havacılık Stajyeri", "İnşaat Stajyeri", "İSG Stajyeri", "Kalibrasyon Stajyeri", "Kalite Stajyeri", "Kalıp Stajyeri", "Lojistik Stajyeri", "Makine Mühendisliği Stajyeri", "Mekanik Bakım Stajyeri", "Mekanik Stajyeri", "Mekatronik Stajyeri", "Metalurji ve Malzeme Stajyeri", "Mobil Uygulama Stajyeri", "Otomotiv Stajyeri", "Otomasyon Stajyeri", "Pazarlama Stajyeri", "PCB Tasarım Stajyeri", "PLC/SCADA Stajyeri", "Planlama Stajyeri", "Proje Stajyeri", "Proses Stajyeri", "RF/Mikrodalga Stajyeri", "Robotik Stajyeri", "Saha Stajyeri", "Satış Stajyeri", "Siber Güvenlik Stajyeri", "Sistem Stajyeri", "Telekomünikasyon Stajyeri", "Tedarik Zinciri Stajyeri", "Test Stajyeri", "Test Mühendisliği Stajyeri", "Üretim Stajyeri", "Üretim Planlama Stajyeri", "Veri Analisti Stajyeri", "Veri Bilimi Stajyeri", "Yapay Zeka Stajyeri", "Yazılım Geliştirici Stajyeri",
+      "Tarım Mühendisi", "Tedarik Zinciri Mühendisi", "Teknik Destek Mühendisi", "Teknik Lider", "Teknik Müdür", "Telekomünikasyon Mühendisi", "Test Mühendisi", "Test Otomasyon Mühendisi", "Tıbbi Görüntüleme Mühendisi", "TypeScript Geliştirici",
+      "Uçak Mühendisi", "Ulaşım Mühendisi", "Uydu Mühendisi", "Uyumluluk Test Mühendisi", "Uzay Mühendisi", "Üretim Mühendisi", "Üretim Planlama Mühendisi",
+      "Veri Analisti", "Veri Bilimcisi", "Veri Mimarı", "Veri Mühendisi", "Veri Tabanı Yöneticisi", "VLSI Tasarım Mühendisi",
+      "Yalın Üretim Uzmanı", "Yapay Zeka Mühendisi", "Yarı İletken Mühendisi", "Yazılım Geliştirici", "Yazılım Mimarı", "Yazılım Test Mühendisi", "Yenilenebilir Enerji Mühendisi", "Yüksek Gerilim Mühendisi"
+    ].sort(_trSort);
+    const SEKTORLER = [
+      "Ahşap ve Giyim", "Ambalaj", "Ar-Ge", "Bankacılık", "Basın ve Medya", "Beyaz Eşya", "Bilgi Güvenliği", "Bilişim Teknolojileri", "Biyomedikal", "Biyoteknoloji", "Bulut Bilişim", "Cam ve Seramik", "Çağrı Merkezi", "Danışmanlık", "Demir-Çelik", "Demiryolu", "Denizcilik", "Dişçilik ve Medikal Üretim", "Doğal Gaz", "E-Ticaret", "Eğitim", "Eğlence ve Medya", "Elektrik & Elektronik", "Emlak / Gayrimenkul", "Endüstriyel Otomasyon", "Enerji (Yenilenebilir)", "Finans", "Fintech", "Gemi İnşa", "Gıda", "Giyim / Tekstil", "Güvenlik Teknolojileri", "Haberleşme", "Havacılık ve Uzay", "Hukuk", "İklimlendirme (HVAC)", "İlaç Sanayi", "İmalat", "İnşaat / Mimarlık", "İş Makinaları", "İthalat / İhracat", "Kamu", "Kimya", "Kozmetik", "Kripto Para / Blockchain", "Lojistik", "Madencilik", "Makine İmalat", "Medya", "Mekatronik", "Metal Sanayi", "Mobilya", "Optik / Fotonik", "Otelcilik / Turizm", "Otomasyon", "Otomotiv", "Oyun Sektörü", "Pazarlama / Reklamcılık", "Perakende", "Petrol ve Gaz", "Plastik ve Kauçuk", "Robotik", "Sağlık Hizmetleri", "Sağlık Teknolojileri", "Savunma Sanayi", "Siber Güvenlik", "Sigortacılık", "Sivil Havacılık", "Tarım ve Hayvan", "Tasarım", "Teknoloji", "Telekomünikasyon", "Test ve Sertifikasyon", "Tüketici Elektroniği", "Ulaşım / Taşımacılık", "Üretim", "Veri Merkezi / Hosting", "Veterinerlik", "Yapay Zeka (AI)", "Yarı İletken Sanayi", "Yazılım", "Yeme İçme (FMCG)"
+    ].sort(_trSort);
+
+    const DENEYIM_POZISYONLARI = [
+      "AR-GE Mühendisi", "AR-GE Stajyeri", "AR-GE Teknisyeni", "Akıllı Şebeke Mühendisi", "Akustik Mühendisi", "Analog Tasarım Mühendisi", "Aydınlatma Tasarım Mühendisi",
+      "Bakım Mühendisi", "Bakım Planlama Mühendisi", "Bakım Teknisyeni", "Backend Geliştirici", "Bilgisayar Donanım Mühendisi", "Bilgisayar Mühendisi", "Bilgisayarlı Görü Mühendisi", "Biyomedikal Cihaz Teknikeri", "Biyomedikal Mühendisi", "Bobinaj Teknisyeni", "Bootloader Mühendisi", "Bulut Mühendisi",
+      "C/C++ Geliştirici", "CAD Operatörü", "CNC Operatörü", "CNC Programcısı", "CMM Operatörü", "Çağrı Merkezi Teknik Destek", "Çevre Mühendisi", "Çevresel Test Mühendisi",
+      "DCS Mühendisi", "Devreye Alma Mühendisi", "Devreye Alma Teknisyeni", "Dijital Tasarım Mühendisi", "Doğal Gaz Mühendisi", "Donanım Doğrulama Mühendisi", "Donanım Geliştirme Mühendisi", "Donanım Tasarım Mühendisi", "Donanım Test Mühendisi", "DSP Mühendisi",
+      "Elektrik Bakım Mühendisi", "Elektrik Bakım Teknisyeni", "Elektrik İşleri Sorumlusu", "Elektrik Mühendisi", "Elektrik Pano Tasarım Mühendisi", "Elektrik Şantiye Şefi", "Elektrik Tasarım Mühendisi", "Elektrik Teknisyeni", "Elektrik-Elektronik Mühendisi", "Elektromekanik Bakım Teknisyeni", "Elektronik Bakım Teknisyeni", "Elektronik Donanım Mühendisi", "Elektronik Mühendisi", "Elektronik Tasarım Mühendisi", "Elektronik Üretim Mühendisi", "EMC Test Mühendisi", "Endüstri 4.0 Mühendisi", "Endüstri Mühendisi", "Endüstriyel Otomasyon Mühendisi", "Endüstriyel Tasarım Mühendisi", "Enerji Analisti", "Enerji Mühendisi", "Enerji Sistemleri Mühendisi", "Enerji Verimliliği Mühendisi", "Enerji Yöneticisi", "ERP Danışmanı", "ERP Geliştirici",
+      "FAE (Field Application Engineer)", "Firmware Mühendisi", "Formen", "FPGA Doğrulama Mühendisi", "FPGA Tasarım Mühendisi", "Frontend Geliştirici", "Full-Stack Geliştirici",
+      "Gemi Elektrik Mühendisi", "Generatör Bakım Teknisyeni", "Geri Dönüşüm Mühendisi", "Gömülü C++ Mühendisi", "Gömülü Linux Mühendisi", "Gömülü Sistem Mühendisi", "Gömülü Yazılım Geliştirici", "Gömülü Yazılım Mühendisi", "Görüntü İşleme Mühendisi", "Güç Elektroniği Mühendisi", "Güç Sistemleri Mühendisi", "Güneş Enerjisi Mühendisi", "Güvenilirlik Mühendisi", "Güvenlik Sistemleri Mühendisi",
+      "Haberleşme Mühendisi", "Harita Mühendisi", "Havacılık Bakım Teknisyeni", "Havacılık Mühendisi", "HIL Test Mühendisi", "HMI Tasarım Mühendisi", "HVAC Bakım Teknisyeni", "HVAC Mühendisi", "HVAC Kontrol Mühendisi",
+      "IoT Çözüm Mimarı", "IoT Donanım Mühendisi", "IoT Yazılım Geliştirici", "İklimlendirme Teknisyeni", "İmalat Mühendisi", "İnşaat Mühendisi", "İSG Uzmanı", "İş Geliştirme Mühendisi",
+      "Java Geliştirici", "Jeneratör Servis Teknisyeni", "Junior Backend Geliştirici", "Junior Donanım Mühendisi", "Junior Firmware Mühendisi", "Junior Frontend Geliştirici", "Junior Gömülü Yazılım Mühendisi", "Junior Yazılım Geliştirici",
+      "Kalibrasyon Mühendisi", "Kalibrasyon Teknisyeni", "Kalite Güvence Mühendisi", "Kalite Kontrol Mühendisi", "Kalite Kontrol Teknisyeni", "Kalite Mühendisi", "Kalıp Tasarım Mühendisi", "Kestirimci Bakım Mühendisi", "Kıdemli Backend Geliştirici", "Kıdemli Donanım Mühendisi", "Kıdemli Firmware Mühendisi", "Kıdemli Frontend Geliştirici", "Kıdemli Gömülü Yazılım Mühendisi", "Kıdemli Yazılım Mühendisi", "Kimya Mühendisi", "Kimyager", "Kontrol Mühendisi", "Kontrol Sistemleri Mühendisi", "Koruma ve Röle Mühendisi", "Kriptografi Uzmanı",
+      "LabVIEW Geliştirici", "Laboratuvar Teknisyeni", "Lojistik Mühendisi", "Lojistik Sorumlusu",
+      "Maden Mühendisi", "Makine Bakım Teknisyeni", "Makine Mühendisi", "Makine Operatörü", "Makine Öğrenmesi Mühendisi", "Malzeme Mühendisi", "Matlab Geliştirici", "Mekanik Bakım Mühendisi", "Mekanik Bakım Teknisyeni", "Mekanik Tasarım Mühendisi", "Mekatronik Mühendisi", "Mekatronik Teknisyeni", "Metalurji Mühendisi", "Metroloji Mühendisi", "Mikrodalga Mühendisi", "Mikrodenetleyici Yazılım Mühendisi", "Mikroelektronik Mühendisi", "MLOps Mühendisi", "Mobil Uygulama Geliştirici", "Montaj Şefi", "Montaj Teknisyeni", "Motor Tasarım Mühendisi", "Müşteri İlişkileri Mühendisi",
+      "Nükleer Mühendis",
+      "Ölçü Aletleri Teknisyeni", "Ölçü ve Kumanda Mühendisi", "Ölçü ve Kumanda Operatörü", "Ölçü ve Kumanda Teknisyeni", "Operatör", "Otomasyon Mühendisi", "Otomasyon Teknisyeni", "Otomotiv Mühendisi", "Otonom Sistemler Mühendisi", "Oyun Geliştirici",
+      "Pano Montaj Personeli", "Pano Tasarım Mühendisi", "PCB Tasarım Mühendisi", "Petrol Mühendisi", "PLC Programcısı", "PLC Teknisyeni", "Proje Asistanı", "Proje Mühendisi", "Proje Yöneticisi", "Proses Kontrol Mühendisi", "Proses Mühendisi", "Python Geliştirici",
+      "React Geliştirici", "RF Mühendisi", "RF/Mikrodalga Mühendisi", "Robot Programlama Mühendisi", "Robotik Mühendisi", "Röle Test Mühendisi", "RTOS Mühendisi", "Rüzgar Türbini Bakım Teknisyeni",
+      "Site Reliability Engineer (SRE)", "SoC Tasarım Mühendisi", "Solar Panel Montaj Teknisyeni",
+      "AR-GE Stajyeri", "Ağ Stajyeri", "Android Geliştirici Stajyeri", "Backend Geliştirici Stajyeri", "Bakım Stajyeri", "Bilgisayar Mühendisliği Stajyeri", "Biyomedikal Stajyeri", "Bulut Stajyeri", "CNC Stajyeri", "Çevre Stajyeri", "Danışmanlık Stajyeri", "Data Stajyeri", "DevOps Stajyeri", "Donanım Tasarım Stajyeri", "Elektrik Bakım Stajyeri", "Elektrik Stajyeri", "Elektrik-Elektronik Stajyeri", "Elektronik Stajyeri", "Endüstri Mühendisliği Stajyeri", "Enerji Stajyeri", "Finans Stajyeri", "FPGA/VHDL Stajyeri", "Frontend Geliştirici Stajyeri", "Full-Stack Geliştirici Stajyeri", "Gömülü Yazılım Stajyeri", "Güç Elektroniği Stajyeri", "Haberleşme Stajyeri", "Harita Mühendisliği Stajyeri", "Havacılık Stajyeri", "İnşaat Stajyeri", "İSG Stajyeri", "Kalibrasyon Stajyeri", "Kalite Stajyeri", "Kalıp Stajyeri", "Lojistik Stajyeri", "Makine Mühendisliği Stajyeri", "Mekanik Bakım Stajyeri", "Mekanik Stajyeri", "Mekatronik Stajyeri", "Metalurji ve Malzeme Stajyeri", "Mobil Uygulama Stajyeri", "Otomotiv Stajyeri", "Otomasyon Stajyeri", "Pazarlama Stajyeri", "PCB Tasarım Stajyeri", "PLC/SCADA Stajyeri", "Planlama Stajyeri", "Proje Stajyeri", "Proses Stajyeri", "RF/Mikrodalga Stajyeri", "Robotik Stajyeri", "Saha Stajyeri", "Satış Stajyeri", "Siber Güvenlik Stajyeri", "Sistem Stajyeri", "Telekomünikasyon Stajyeri", "Tedarik Zinciri Stajyeri", "Test Stajyeri", "Test Mühendisliği Stajyeri", "Üretim Stajyeri", "Üretim Planlama Stajyeri", "Veri Analisti Stajyeri", "Veri Bilimi Stajyeri", "Yapay Zeka Stajyeri", "Yazılım Geliştirici Stajyeri",
+      "Şantiye Mühendisi", "Şantiye Şefi", "Şarj İstasyonu Mühendisi", "Şebeke Operatörü",
+      "Tasarım Mühendisi", "Tedarik Zinciri Mühendisi", "Teknik Çizimci", "Teknik Destek Mühendisi", "Teknik Destek Uzmanı", "Teknik Lider", "Teknik Müdür", "Teknik Ressam", "Telekomünikasyon Mühendisi", "Test Mühendisi", "Test Otomasyon Mühendisi", "Test Teknisyeni", "Trafo Bakım Teknisyeni", "TypeScript Geliştirici",
+      "Uçak Bakım Teknisyeni", "Uçak Mühendisi", "Uydu Mühendisi", "Uyumluluk Test Mühendisi", "Uzay Mühendisi", "Üretim Mühendisi", "Üretim Operatörü", "Üretim Planlama Mühendisi", "Üretim Sorumlusu", "Üretim Şefi",
+      "Veri Analisti", "Veri Bilimcisi", "Veri Mühendisi", "Veri Tabanı Yöneticisi", "VLSI Tasarım Mühendisi",
+      "Yalın Üretim Uzmanı", "Yapay Zeka Mühendisi", "Yarı İletken Test Mühendisi", "Yazılım Geliştirici", "Yazılım Mimarı", "Yazılım Test Mühendisi", "Yenilenebilir Enerji Mühendisi", "Yüksek Gerilim Mühendisi"
+    ].sort(_trSort);
+
+    const POZISYON_GOREVLERI = {
+      "Gömülü Yazılım Stajyeri": ["STM32 firmware geliştirme", "ESP32 IoT prototipleme", "UART/SPI/I2C protokol implementasyonu", "FreeRTOS task yönetimi", "Bare-metal C kod yazımı", "Debugger kullanımı (J-Link,ST-Link)", "Düşük güç tüketimi optimizasyonu", "Bootloader geliştirme", "HAL/LL sürücü kullanımı", "Sensör entegrasyonu", "CAN Bus haberleşmesi", "Birim test (Unity)"],
+      "Donanım Tasarım Stajyeri": ["KiCad ile şematik tasarım", "Altium Designer PCB layout", "Çok katmanlı PCB tasarımı", "SMD lehimleme", "DRC/ERC kontrolü", "Güç entegre devre seçimi", "Sinyal bütünlüğü analizi", "BOM oluşturma", "Prototip test", "Devre simülasyonu (LTspice)", "EMC/EMI uyumluluk testi"],
+      "Otomasyon Stajyeri": ["Siemens S7-1200/1500 PLC programlama", "TIA Portal kullanımı", "SCADA ekran tasarımı (WinCC)", "HMI programlama", "Modbus TCP/RTU", "Profinet konfigürasyonu", "Servo motor sürücü ayarı", "Endüstriyel sensör kalibrasyonu", "Pano çizimi (EPLAN)", "P&ID okuma", "Saha test ve devreye alma"],
+      "Yazılım Geliştirici Stajyeri": ["REST API geliştirme", "Veritabanı tasarımı (PostgreSQL)", "Git workflow", "Code review katılımı", "Birim test yazımı", "CI/CD pipeline (GitHub Actions)", "Docker konteynerizasyonu", "Agile/Scrum ceremoniler", "Bug fix", "Frontend bileşen geliştirme", "Performans optimizasyonu"],
+      "ARGE Stajyeri": ["Literatür taraması", "Prototip geliştirme", "Test düzeneği kurulumu", "Veri toplama ve analiz", "MATLAB ile simülasyon", "Teknik rapor yazımı", "Patent araştırması", "Konferans makale takibi", "Tasarım iyileştirme önerileri", "CAD modelleme"],
+      "Üretim Stajyeri": ["Üretim hattı gözlemi", "Kalite kontrol", "SAP veri girişi", "Yalın üretim uygulamaları", "5S çalışmaları", "Kaizen önerileri", "SOP dokümantasyonu", "Toplam Ekipman Verimliliği analizi", "ISO 9001 süreç takibi", "İş sağlığı ve güvenliği"],
+      "Test Mühendisi Stajyeri": ["Test prosedürü yazımı", "Otomatik test scripti", "Osiloskop/multimetre kullanımı", "Test raporlama", "HALT/HASS testleri", "Çevresel test (sıcaklık,nem)", "EMC ön testleri", "JIRA hata takibi"],
+      "Elektrik Bakım Stajyeri": ["Koruyucu (periyodik) bakım planlaması", "OG/AG pano bakım ve kontrolü", "Trafo bakım ve yağ analizi", "Arıza tespit ve onarımı", "Topraklama ölçümü ve kontrolü", "Kablo döşeme ve terminasyon", "Motor bakım ve sargı kontrolü", "Enerji analizörü ile ölçüm", "Termografik kamera ile arıza tespiti", "Kompanzasyon sistemi bakımı", "Aydınlatma ve priz tesisatı", "Jeneratör bakım ve test", "Kesintisiz güç kaynağı (UPS) bakımı", "İş güvenliği (LOTO prosedürü)", "Elektrik tek hat şeması okuma"],
+      "Elektrik-Elektronik Stajyeri": ["Analog/dijital devre tasarımı", "PCB tasarımı ve üretim takibi", "Güç elektroniği devre analizi", "Sinyal işleme uygulamaları", "Osiloskop ve lojik analizör kullanımı", "Mikrodenetleyici programlama", "Sensör entegrasyonu ve kalibrasyonu", "EMC/EMI uyumluluk testi", "Devre simülasyonu (LTspice/Proteus)", "Lehimleme ve prototip üretimi", "Teknik dokümantasyon hazırlama", "Güç kaynağı tasarımı"],
+      "Enerji Sistemleri Stajyeri": ["Güneş enerji sistemi (Solar PV) tasarımı", "Rüzgar türbini bakım ve izleme", "Enerji verimliliği analizi", "SCADA ile enerji izleme", "Şebeke bağlantı ve koruma sistemleri", "Enerji depolama sistemleri (batarya)", "Yük akış analizi", "Güç kalitesi ölçümü", "Trafo merkezi işletme", "Enerji mevzuatı ve raporlama (ETKB)", "Akıllı şebeke (smart grid) uygulamaları", "Topraklama ve paratoner sistemleri"]
+    };
+
+    const SIRKET_LISTESI = ["ASELSAN", "TUSAŞ", "Roketsan", "HAVELSAN", "BAYKAR", "STM", "MKE", "FNSS", "Otokar", "Nurol Makina", "TEI", "Kale Havacılık", "Alp Havacılık", "Vestel", "Arçelik", "Bosch Türkiye", "Siemens Türkiye", "ABB Türkiye", "Schneider Electric", "General Electric", "Honeywell", "Ford Otosan", "TOFAŞ", "TEMSA", "Mercedes Türk", "Toyota Türkiye", "Hyundai Assan", "BMC", "Karsan", "Türk Telekom", "Turkcell", "Vodafone Türkiye", "Türksat", "TÜRKSAT Uydu", "TÜBİTAK BİLGEM", "TÜBİTAK SAGE", "TÜBİTAK MAM", "THY Teknik", "Pegasus", "TAV", "DHMİ", "TCDD", "Trendyol", "Getir", "Hepsiburada", "Yemeksepeti", "Peak Games", "Dream Games", "Insider", "Hugo", "Logo Yazılım", "Netaş", "Karel", "Airties", "Defacto", "Eczacıbaşı", "Ülker", "Doğuş Teknoloji", "Garanti BBVA Teknoloji", "Akbank Teknoloji", "Yapı Kredi Teknoloji", "İş Bankası Yazılım", "Borusan", "Sabancı", "Koç Holding", "Enerjisa", "EnerjiSA Üretim", "Aksa Enerji", "Zorlu Enerji", "BorçelikKablo", "Türk Prysmian Kablo"];
+
+    const TEKNOLOJILER = {
+      "Donanım": ["STM32", "ESP32", "ESP8266", "Arduino", "Raspberry Pi", "FPGA", "VHDL", "Verilog", "PIC", "AVR", "Nordic nRF", "Beaglebone", "Jetson Nano"],
+      "Yazılım Dilleri": ["Python", "C", "C++", "C#", "MATLAB", "JavaScript", "TypeScript", "Java", "Rust", "Go", "MicroPython", "Assembly", "SQL"],
+      "EDA / CAD": ["KiCad", "Altium Designer", "Proteus", "LTspice", "Eagle", "SolidWorks", "AutoCAD", "Fusion 360", "EPLAN", "Cadence", "OrCAD"],
+      "Framework / Kütüphane": ["Qt", "ROS", "ROS2", "TensorFlow", "PyTorch", "OpenCV", "Numpy", "Pandas", "Scikit-learn", "Node.js", "React", "Flask", "FastAPI", "Django", "STM32 HAL", "FreeRTOS", "Zephyr"],
+      "Araçlar": ["Git", "GitHub", "GitLab", "Linux", "Docker", "VS Code", "STM32CubeIDE", "Keil", "IAR", "JIRA", "Confluence", "Postman", "Wireshark"],
+      "Endüstriyel": ["Siemens TIA Portal", "Allen-Bradley", "Mitsubishi GX Works", "CodeSys", "WinCC", "Ignition", "Modbus", "Profinet", "CAN", "EtherCAT", "OPC UA"]
+    };
+
+    const BECERI_KATALOG = {
+      "Programlama Dilleri": ["Assembly", "Bash", "C", "C#", "C++", "Clojure", "CSS", "Dart", "Delphi", "Elixir", "Erlang", "F#", "Fortran", "Go", "Groovy", "Haskell", "HTML", "Java", "JavaScript", "Julia", "Kotlin", "LabVIEW", "LaTeX", "Lua", "MATLAB", "MicroPython", "Nim", "Objective-C", "OCaml", "Perl", "PHP", "PowerShell", "Prolog", "Python", "R", "Ruby", "Rust", "Scala", "Solidity", "SQL", "Swift", "TypeScript", "VBA", "Verilog", "VHDL", "WebAssembly", "XML", "YAML", "Zig"].sort(_trSort),
+
+      "Mikrodenetleyici / Gömülü": ["Arduino", "Arm Cortex-M", "AVR", "Bare-metal C", "BeagleBone", "ESP-IDF", "ESP32", "ESP8266", "FreeRTOS", "HAL/LL", "Infineon AURIX", "Interrupt/ISR", "Jetson Nano", "Linker Script", "Mbed OS", "Microchip SAM", "Nordic nRF52", "PIC16", "PIC18", "PIC32", "Raspberry Pi", "Raspberry Pi Pico", "Renesas", "STM32", "STM32 HAL", "STM32 LL", "TI C2000", "Teensy", "Watchdog Timer", "Zephyr RTOS"].sort(_trSort),
+
+      "Haberleşme & Protokoller": ["1-Wire", "Bluetooth", "BLE", "CAN Bus", "CANopen", "CoAP", "DALI", "EtherCAT", "Ethernet", "gRPC", "HTTP/REST", "I2C", "I2S", "IPv6", "KNX", "LoRa", "LoRaWAN", "Modbus ASCII", "Modbus RTU", "Modbus TCP", "MQTT", "OPC UA", "PCIe", "Profibus", "Profinet", "RS-232", "RS-422", "RS-485", "SPI", "TCP/IP", "UART", "USB", "WebSocket", "Wi-Fi", "Zigbee"].sort(_trSort),
+
+      "Donanım Tasarımı (EDA/PCB)": ["Alegro PCB", "Altium Designer", "Cadence", "DipTrace", "Eagle", "EasyEDA", "KiCad", "Mentor Graphics", "OrCAD", "Proteus", "Saturn PCB Toolkit"].sort(_trSort),
+
+      "CAD & 3D Modelleme": ["AutoCAD", "AutoCAD Electrical", "CATIA", "Creo Parametric", "EPLAN Electric P8", "FreeCAD", "Fusion 360", "Inventor", "NX (Siemens)", "SolidWorks", "SolidWorks Electrical"].sort(_trSort),
+
+      "IDE & Geliştirme Ortamları": ["Android Studio", "CLion", "Code::Blocks", "Eclipse", "IAR EWARM", "IntelliJ IDEA", "Keil µVision", "Notepad++", "PyCharm", "ST-Link", "STM32CubeIDE", "Sublime Text", "Visual Studio", "Visual Studio Code", "Vim", "WebStorm", "Xcode"].sort(_trSort),
+
+      "Test, Analiz & Simülasyon": ["Abaqus", "ANSYS", "COMSOL Multiphysics", "LTspice", "MATLAB", "Multisim", "PSpice", "Simulink", "LabVIEW", "Postman", "Wireshark", "Oscilloscope / Logic Analyzer", "J-Link", "Saleae Logic", "Selenium", "SonarQube", "JMeter"].sort(_trSort),
+
+      "Versiyon Kontrol & DevOps": ["Ansible", "AWS", "Azure", "Bitbucket", "CircleCI", "Docker", "Docker Compose", "Git", "GitHub", "GitHub Actions", "GitLab", "Jenkins", "Kubernetes", "Linux", "Prometheus", "Terraform", "Travis CI"].sort(_trSort),
+
+      "İşletim Sistemleri": ["Android", "CentOS", "Debian", "FreeRTOS", "iOS", "Linux", "macOS", "QNX", "Red Hat", "Ubuntu", "Windows", "Windows Server", "Zephyr RTOS"].sort(_trSort),
+
+      "Veritabanı Sistemleri": ["Cassandra", "Elasticsearch", "Firebase", "MariaDB", "MongoDB", "MySQL", "Oracle DB", "PostgreSQL", "Redis", "SQLite", "SQL Server"].sort(_trSort),
+
+      "Ofis & İş Yönetimi": ["Asana", "Confluence", "Figma", "Jira", "Microsoft Excel", "Microsoft Office", "Microsoft PowerPoint", "Microsoft Word", "Notion", "Slack", "Trello", "Miro"].sort(_trSort),
+
+      "Güç / Enerji / Otomasyon": ["Allen-Bradley", "Beckhoff TwinCAT", "CODESYS", "DCS Sistemleri", "Delta DVP", "Güneş Paneli (Solar PV)", "HMI Tasarımı", "Inverter (DC/AC)", "Ladder Logic", "Mitsubishi GX Works", "Motor Kontrol (FOC)", "Omron", "Pano Tasarımı", "PLC Programlama", "Profinet", "SCADA", "Schneider", "Servo Sürücü", "Siemens S7-1200", "Siemens S7-1500", "Siemens TIA Portal", "Yüksek Gerilim"].sort(_trSort)
+    };
+
+    const SOFT_SKILLS = [
+      "Adaptasyon", "Agile Yönetimi", "Ağ Oluşturma (Networking)", "Aktif Dinleme", "Analitik Düşünme", "Ayrıntılara Dikkat", "Beden Dili", "Çatışma Yönetimi", "Çeviklik (Agility)", "Çok Görevlilik (Multitasking)", "Değişime Açıklık", "Delegasyon", "Detay Odaklılık", "Dışa Dönüklük", "Dikkatli Çalışma", "Dokümantasyon", "Duygusal Zeka (EQ)", "Ekip Liderliği", "Ekip Çalışması ve İşbirliği", "Eleştirel Düşünme", "Empati", "Etkili İletişim", "Etkili Sunum", "Esneklik", "Etkileme ve İkna", "Geri Bildirim Verme / Alma", "Girişimcilik", "Hata Analizi", "Hızlı Karar Verme", "Hızlı Öğrenme", "Hoşgörü ve Sabır", "İkna Kabiliyeti", "İletişim", "İnisiyatif Alma", "İnovasyon", "İnsan İlişkileri", "Kapsayıcılık", "Karar Verme", "Kendi Kendini Motive Etme", "Kendini Geliştirme", "Koçluk", "Kriz Yönetimi", "Kritik Durum Analizi", "Kültürel Farkındalık", "Liderlik", "Maliyet Bilinci", "Mantıksal Çıkarım", "Memnuniyet Odaklılık", "Mentörlük", "Merak", "Mizaç Yönetimi", "Motivasyon", "Müşteri Odaklılık", "Müzakere (Negotiation)", "Objektiflik", "Organizasyon", "Planlama ve Koordinasyon", "Pozitif Tutum", "Problem Çözme", "Proje Yönetimi", "Proaktiflik", "Raporlama", "Risk Yönetimi", "Sabır", "Sakin Kalabilme", "Sentezleme Yeteneği", "Sorumluluk Bilinci", "Sözlü İletişim", "Stratejik Düşünme", "Strese Dayanıklılık", "Stres Yönetimi", "Sunum Becerileri", "Sürekli Öğrenme", "Takım Çalışması", "Takım Ruhu Oluşturma", "Topluluk Önünde Konuşma", "Toplantı Yönetimi", "Uzlaşma", "Yaratıcılık", "Yaratıcı Sorun Çözme", "Yazılı İletişim", "Yetki Devri (Delegasyon)", "Yönetim Becerileri", "Zaman Yönetimi", "Zor İnsanlarla Başa Çıkma"
+    ].sort(_trSort);
+
+    const DILLER = ["Türkçe", "İngilizce", "Almanca", "Fransızca", "İspanyolca", "İtalyanca", "Rusça", "Arapça", "Çince", "Japonca", "Korece", "Portekizce", "Hollandaca"];
+    const DIL_SEVIYELERI = ["Anadil", "C2", "C1", "B2", "B1", "A2", "A1"];
+
+    const BURS_ONUR = ["TÜBİTAK 2205 Bursu", "TÜBİTAK 2209 Projesi", "KYK Bursu", "TEV Bursu", "Türk Eğitim Vakfı Bursu", "Tam Burs", "Yarı Burs", "Bölüm Birincisi", "Fakülte Birincisi", "Yüksek Onur Öğrencisi", "Onur Öğrencisi", "Erasmus+ Bursu", "Mevlana Değişim", "Üstün Başarı Bursu"];
+
+    const GONULLU_TIPLERI = ["Öğrenci Kulübü", "IEEE", "ACM", "Mühendislik Topluluğu", "Spor Kulübü", "Sanat Kulübü", "Gönüllü Organizasyon", "Sosyal Sorumluluk", "TEMA", "AKUT", "LÖSEV", "Robotik Takımı", "TÜBİTAK Yarışma Takımı", "Formula Student", "Hackathon Topluluğu"];
+
+    const GONULLU_AKTIVITELER = ["Etkinlik organizasyonu", "Sponsor toplama", "Sosyal medya yönetimi", "Atölye düzenleme", "Yarışma katılımı", "Mentorluk", "Bağış kampanyası", "Eğitim verme", "Tanıtım standı", "Konferans organizasyonu", "Yıllık plan hazırlama", "Bütçe yönetimi", "Üye toplama", "Web sitesi yönetimi", "Proje yürütücülüğü"];
+
+    const HAM_NOT_TR_TEKIL = ["ben", "bizim", "yaptım", "ettim", "oldum", "kazandım", "öğrendim"];
+
+    // =================== TR -> EN ÇEVİRİ TABLOSU ===================
+    // CV önizlemesinde İngilizce dil seçildiğinde, kullanıcının TR olarak girdiği
+    // kategorik değerlerin EN karşılıkları. Eşleşme yoksa değer olduğu gibi bırakılır.
+    const TR_EN_MAP = {
+      // Dereceler
+      "Lise": "High School", "Ön Lisans": "Associate Degree", "Lisans": "Bachelor's Degree", "Yüksek Lisans": "Master's Degree", "Doktora": "PhD",
+      // Çalışma türleri
+      "Staj": "Internship", "Part-time": "Part-time", "Tam zamanlı": "Full-time", "Gönüllü": "Volunteer", "Freelance": "Freelance",
+      // Onur / Burslar
+      "Onur Öğrencisi": "Dean's List", "Yüksek Onur Öğrencisi": "High Honor Student", "Bölüm Birincisi": "Department First", "Fakülte Birincisi": "Faculty First", "Tam Burs": "Full Scholarship", "Yarı Burs": "Half Scholarship", "KYK Bursu": "KYK Scholarship", "TEV Bursu": "TEV Scholarship", "TÜBİTAK 2205 Bursu": "TÜBİTAK 2205 Scholarship", "TÜBİTAK 2209 Projesi": "TÜBİTAK 2209 Project", "Erasmus+ Bursu": "Erasmus+ Scholarship", "Üstün Başarı Bursu": "Excellence Scholarship", "Mevlana Değişim": "Mevlana Exchange Program", "Türk Eğitim Vakfı Bursu": "Turkish Education Foundation Scholarship",
+      // Ülkeler
+      "Türkiye": "Turkey", "Almanya": "Germany", "Amerika Birleşik Devletleri": "United States", "Birleşik Krallık": "United Kingdom", "Fransa": "France", "Hollanda": "Netherlands", "İtalya": "Italy", "İspanya": "Spain", "İsveç": "Sweden", "İsviçre": "Switzerland", "Avusturya": "Austria", "Belçika": "Belgium", "Kanada": "Canada", "Japonya": "Japan", "Çin": "China", "Kore": "South Korea",
+      // Şehirler (Türkçe karakter -> ASCII/İngilizce)
+      "İstanbul": "Istanbul", "İzmir": "Izmir", "Ankara": "Ankara", "Kocaeli": "Kocaeli", "Bursa": "Bursa", "Muğla": "Mugla", "Çanakkale": "Canakkale", "Şanlıurfa": "Sanliurfa", "Gaziantep": "Gaziantep", "Eskişehir": "Eskisehir", "Kırklareli": "Kirklareli", "Ağrı": "Agri", "Balıkesir": "Balikesir",
+      // Bölümler - Lisans
+      "Bilgisayar Mühendisliği": "Computer Engineering", "Elektrik-Elektronik Mühendisliği": "Electrical and Electronics Engineering", "Elektrik Mühendisliği": "Electrical Engineering", "Elektronik Mühendisliği": "Electronics Engineering", "Elektronik ve Haberleşme Mühendisliği": "Electronics and Communications Engineering", "Endüstri Mühendisliği": "Industrial Engineering", "Endüstriyel Tasarım Mühendisliği": "Industrial Design Engineering", "Makine Mühendisliği": "Mechanical Engineering", "Yazılım Mühendisliği": "Software Engineering", "Mekatronik Mühendisliği": "Mechatronics Engineering", "Biyomedikal Mühendisliği": "Biomedical Engineering", "Kontrol ve Otomasyon Mühendisliği": "Control and Automation Engineering", "Telekomünikasyon Mühendisliği": "Telecommunications Engineering", "Havacılık ve Uzay Mühendisliği": "Aerospace Engineering", "Uçak Mühendisliği": "Aeronautical Engineering", "Uzay Mühendisliği": "Space Engineering", "Enerji Sistemleri Mühendisliği": "Energy Systems Engineering", "Gömülü Sistemler": "Embedded Systems", "Çevre Mühendisliği": "Environmental Engineering", "Kimya Mühendisliği": "Chemical Engineering", "Malzeme Mühendisliği": "Materials Engineering", "Metalurji ve Malzeme Mühendisliği": "Metallurgical and Materials Engineering", "Fizik Mühendisliği": "Physics Engineering", "Matematik Mühendisliği": "Mathematics Engineering", "Jeofizik Mühendisliği": "Geophysical Engineering", "Jeoloji Mühendisliği": "Geological Engineering", "Harita Mühendisliği": "Geomatics Engineering", "İnşaat Mühendisliği": "Civil Engineering", "Maden Mühendisliği": "Mining Engineering", "Petrol ve Doğalgaz Mühendisliği": "Petroleum and Natural Gas Engineering", "Nükleer Enerji Mühendisliği": "Nuclear Engineering", "Gıda Mühendisliği": "Food Engineering", "Otomotiv Mühendisliği": "Automotive Engineering", "Tekstil Mühendisliği": "Textile Engineering", "Gemi İnşaatı ve Gemi Makineleri Mühendisliği": "Naval Architecture and Marine Engineering", "İşletme Mühendisliği": "Management Engineering", "Yapay Zeka Mühendisliği": "Artificial Intelligence Engineering", "Veri Bilimi ve Analitik": "Data Science and Analytics", "Mikro ve Nanoteknoloji Mühendisliği": "Micro and Nanotechnology Engineering", "Meteoroloji Mühendisliği": "Meteorological Engineering", "Tarım Makineleri ve Teknolojileri Mühendisliği": "Agricultural Machinery Engineering", "İstatistik": "Statistics", "Matematik": "Mathematics", "Fizik": "Physics", "Kimya": "Chemistry", "İşletme": "Business Administration", "Ekonomi": "Economics",
+      // Bölümler - Ön Lisans
+      "Bilgisayar Programcılığı": "Computer Programming", "Biyomedikal Cihaz Teknolojisi": "Biomedical Device Technology", "Elektrik": "Electrical", "Elektronik Teknolojisi": "Electronics Technology", "Elektronik Haberleşme Teknolojisi": "Electronic Communication Technology", "Endüstriyel Otomasyon Teknolojisi": "Industrial Automation Technology", "Gıda Teknolojisi": "Food Technology", "Harita ve Kadastro": "Mapping and Cadastre", "İklimlendirme ve Soğutma Teknolojisi": "HVAC and Refrigeration Technology", "İnşaat Teknolojisi": "Construction Technology", "İş Sağlığı ve Güvenliği": "Occupational Health and Safety", "Kontrol ve Otomasyon Teknolojisi": "Control and Automation Technology", "Lojistik": "Logistics", "Makine": "Mechanical", "Mekatronik": "Mechatronics", "Otomotiv Teknolojisi": "Automotive Technology", "Tıbbi Görüntüleme Teknikleri": "Medical Imaging Techniques", "Web Tasarımı ve Kodlama": "Web Design and Development",
+      // Sertifika / beceri kategorileri
+      "Teknik": "Technical", "Dil": "Language", "SoftSkill": "Soft Skill", "Kurs": "Course",
+      // Dil isimleri
+      "Türkçe": "Turkish", "İngilizce": "English", "Almanca": "German", "Fransızca": "French", "İspanyolca": "Spanish", "İtalyanca": "Italian", "Rusça": "Russian", "Arapça": "Arabic", "Çince": "Chinese", "Japonca": "Japanese", "Korece": "Korean", "Portekizce": "Portuguese", "Hollandaca": "Dutch",
+      // Dil seviyeleri
+      "Anadil": "Native",
+      // Güç / Enerji / Otomasyon becerileri
+      "PLC Programlama": "PLC Programming", "Pano Tasarımı": "Panel Design", "Güneş Paneli (Solar PV)": "Solar PV", "Motor Kontrol (FOC)": "Motor Control (FOC)", "Servo Sürücü": "Servo Drive", "Inverter (DC/AC)": "Inverter (DC/AC)", "HMI Tasarımı": "HMI Design", "DCS Sistemleri": "DCS Systems", "Yüksek Gerilim": "High Voltage", "Ladder Logic": "Ladder Logic",
+      // Soft Skills (en yaygın)
+      "Adaptasyon": "Adaptability", "Agile Yönetimi": "Agile Management", "Ağ Oluşturma (Networking)": "Networking", "Aktif Dinleme": "Active Listening", "Analitik Düşünme": "Analytical Thinking", "Ayrıntılara Dikkat": "Attention to Detail", "Beden Dili": "Body Language", "Çatışma Yönetimi": "Conflict Management", "Çeviklik (Agility)": "Agility", "Çok Görevlilik (Multitasking)": "Multitasking", "Değişime Açıklık": "Openness to Change", "Delegasyon": "Delegation", "Detay Odaklılık": "Detail-Oriented", "Dışa Dönüklük": "Extroversion", "Dikkatli Çalışma": "Careful Work", "Dokümantasyon": "Documentation", "Duygusal Zeka (EQ)": "Emotional Intelligence (EQ)", "Ekip Liderliği": "Team Leadership", "Ekip Çalışması ve İşbirliği": "Teamwork and Collaboration", "Eleştirel Düşünme": "Critical Thinking", "Empati": "Empathy", "Etkili İletişim": "Effective Communication", "Etkili Sunum": "Effective Presentation", "Esneklik": "Flexibility", "Etkileme ve İkna": "Influence and Persuasion", "Geri Bildirim Verme / Alma": "Giving / Receiving Feedback", "Girişimcilik": "Entrepreneurship", "Hata Analizi": "Error Analysis", "Hızlı Karar Verme": "Quick Decision Making", "Hızlı Öğrenme": "Fast Learning", "Hoşgörü ve Sabır": "Tolerance and Patience", "İkna Kabiliyeti": "Persuasion Skills", "İletişim": "Communication", "İnisiyatif Alma": "Taking Initiative", "İnovasyon": "Innovation", "İnsan İlişkileri": "Interpersonal Relations", "Kapsayıcılık": "Inclusivity", "Karar Verme": "Decision Making", "Kendi Kendini Motive Etme": "Self-Motivation", "Kendini Geliştirme": "Self-Development", "Koçluk": "Coaching", "Kriz Yönetimi": "Crisis Management", "Kritik Durum Analizi": "Critical Situation Analysis", "Kültürel Farkındalık": "Cultural Awareness", "Liderlik": "Leadership", "Maliyet Bilinci": "Cost Awareness", "Mantıksal Çıkarım": "Logical Reasoning", "Memnuniyet Odaklılık": "Satisfaction-Oriented", "Mentörlük": "Mentoring", "Merak": "Curiosity", "Mizaç Yönetimi": "Temperament Management", "Motivasyon": "Motivation", "Müşteri Odaklılık": "Customer Focus", "Müzakere (Negotiation)": "Negotiation", "Objektiflik": "Objectivity", "Organizasyon": "Organization", "Planlama ve Koordinasyon": "Planning and Coordination", "Pozitif Tutum": "Positive Attitude", "Problem Çözme": "Problem Solving", "Proje Yönetimi": "Project Management", "Proaktiflik": "Proactivity", "Raporlama": "Reporting", "Risk Yönetimi": "Risk Management", "Sabır": "Patience", "Sakin Kalabilme": "Composure", "Sentezleme Yeteneği": "Synthesis Ability", "Sorumluluk Bilinci": "Sense of Responsibility", "Sözlü İletişim": "Verbal Communication", "Stratejik Düşünme": "Strategic Thinking", "Strese Dayanıklılık": "Stress Resistance", "Stres Yönetimi": "Stress Management", "Sunum Becerileri": "Presentation Skills", "Sürekli Öğrenme": "Continuous Learning", "Takım Çalışması": "Teamwork", "Takım Ruhu Oluşturma": "Team Building", "Topluluk Önünde Konuşma": "Public Speaking", "Toplantı Yönetimi": "Meeting Management", "Uzlaşma": "Compromise", "Yaratıcılık": "Creativity", "Yaratıcı Sorun Çözme": "Creative Problem Solving", "Yazılı İletişim": "Written Communication", "Yetki Devri (Delegasyon)": "Delegation of Authority", "Yönetim Becerileri": "Management Skills", "Zaman Yönetimi": "Time Management", "Zor İnsanlarla Başa Çıkma": "Dealing with Difficult People",
+      // Gönüllülük tipleri
+      "Öğrenci Kulübü": "Student Club", "Mühendislik Topluluğu": "Engineering Society", "Spor Kulübü": "Sports Club", "Sanat Kulübü": "Arts Club", "Gönüllü Organizasyon": "Volunteer Organization", "Sosyal Sorumluluk": "Social Responsibility", "Robotik Takımı": "Robotics Team", "TÜBİTAK Yarışma Takımı": "TÜBİTAK Competition Team", "Hackathon Topluluğu": "Hackathon Community"
+    };
+
+    function translateVal(v, lang) {
+      if (lang !== "en" || v == null || v === "") return v;
+      if (Array.isArray(v)) return v.map(x => TR_EN_MAP[x] || x);
+      return TR_EN_MAP[v] || v;
+    }
+
+    // =================== STATE ===================
+    const STORAGE_KEY = "cv-builder-v1";
+    const DEFAULT_STATE = {
+      meta: { lang: "tr", updatedAt: Date.now(), version: 1 },
+      profile: { ad: "", soyad: "", email: "", phoneCC: "+90", phone: "", sehir: "", ulke: "Türkiye", linkedin: "", github: "", portfolio: "", hedefPozisyon: "", hedefSektor: [] },
+      egitim: [],
+      deneyim: [],
+      projeler: [],
+      beceriler: { programlama: [], gomulu: [], protokoller: [], eda: [], cad: [], ide: [], test: [], devops: [], os: [], veritabani: [], ofis: [], guc: [], diller: [], soft: [] },
+      sertifikalar: [],
+      gonulluluk: [],
+      ozet: { tr: "", en: "", varyantlar: {} },
+      ayarlar: { ollamaUrl: "http://localhost:11434", model: "gemma4:e2b", sablon: "tr", renkSemasi: "#e8b84b", font: "DM Sans", kolon: "1" }
+    };
+    let appState = JSON.parse(JSON.stringify(DEFAULT_STATE));
+    let activeTab = "profil";
+    let ollamaOnline = false;
+    // Open/closed state for skill collapsibles (session only — not persisted)
+    const becerilerOpenCats = new Set();
+
+    // =================== STORAGE ===================
+    let saveTimer = null;
+    function saveState() {
+      clearTimeout(saveTimer);
+      saveTimer = setTimeout(() => {
+        appState.meta.updatedAt = Date.now();
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(appState)); updateSaveStatus(); console.log("[CV] State kaydedildi"); } catch (e) { console.error("[CV] Save hata", e); showToast("Kayıt başarısız", "err"); }
+      }, 400);
+      recalcAtsScore(); renderPreview();
+    }
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) { const parsed = JSON.parse(raw); appState = mergeDeep(JSON.parse(JSON.stringify(DEFAULT_STATE)), parsed); showToast("Önceki CV'niz yüklendi ✓", "ok"); return true; }
+      } catch (e) { console.error("[CV] Load hata", e); }
+      return false;
+    }
+    function mergeDeep(target, source) { for (const k in source) { if (source[k] && typeof source[k] === "object" && !Array.isArray(source[k])) { target[k] = mergeDeep(target[k] || {}, source[k]); } else { target[k] = source[k]; } } return target; }
+    function updateSaveStatus() {
+      const el = document.getElementById("save-status"); if (!el) return;
+      const diff = Math.floor((Date.now() - appState.meta.updatedAt) / 1000);
+      let txt = "Az önce kaydedildi";
+      if (diff > 60) txt = `Son kaydetme: ${Math.floor(diff / 60)} dk önce`;
+      else if (diff > 5) txt = `Son kaydetme: ${diff} sn önce`;
+      el.textContent = txt;
+    }
+    setInterval(updateSaveStatus, 30000);
+
+    // =================== TOAST ===================
+    function showToast(msg, type = "info") {
+      const t = document.createElement("div"); t.className = "toast " + type; t.textContent = msg;
+      document.getElementById("toast-stack").appendChild(t);
+      setTimeout(() => { t.style.opacity = "0"; t.style.transform = "translateX(20px)"; setTimeout(() => t.remove(), 300); }, 3500);
+    }
+
+    // =================== OLLAMA ===================
+    let _lastAvailableModels = [];
+    async function checkOllama() {
+      try {
+        const r = await fetch(appState.ayarlar.ollamaUrl + "/api/tags", { signal: AbortSignal.timeout(4000) });
+        if (!r.ok) throw new Error("HTTP " + r.status);
+        const data = await r.json();
+        const models = (data.models || []).map(m => m.name);
+        _lastAvailableModels = models;
+        if (!models.length) {
+          setOllamaStatus(false, "Hiç model yok — ollama pull gemma4:e2b");
+          return false;
+        }
+        const exact = models.includes(appState.ayarlar.model);
+        if (exact) {
+          setOllamaStatus(true, "Ollama bağlı ✓");
+          return models;
+        }
+        // Try to find a similar model and auto-correct
+        const fuzzy = models.find(m => m.startsWith("gemma4:e2b")) || models.find(m => m.startsWith("gemma4")) || models.find(m => m.startsWith("gemma3")) || models.find(m => m.startsWith("llama3")) || models.find(m => m.startsWith("mistral")) || models[0];
+        if (fuzzy) {
+          console.warn("[Ollama] Model adı uyumsuz, otomatik düzeltildi:", appState.ayarlar.model, "→", fuzzy);
+          appState.ayarlar.model = fuzzy;
+          try { localStorage.setItem(STORAGE_KEY, JSON.stringify(appState)); } catch (e) { }
+          setOllamaStatus(true, `Ollama bağlı (${fuzzy}) ✓`);
+          return models;
+        }
+        setOllamaStatus(false, `Model yok — ollama pull ${appState.ayarlar.model}`);
+        return false;
+      } catch (e) {
+        console.warn("[Ollama] Bağlantı hatası", e);
+        let msg = "Bağlantı yok";
+        if (e.name === "TimeoutError") msg = "Zaman aşımı (4s)";
+        else if (e.message === "Failed to fetch") msg = "CORS/Bağlantı hatası";
+        setOllamaStatus(false, msg);
+        return false;
+      }
+    }
+    function extractJSON(text) {
+      text = text.replace(/<think>[\s\S]*?<\/think>/g, "").trim();
+      try { return JSON.parse(text); } catch (e) { }
+      const m = text.match(/[\[{][\s\S]*[\]}]/);
+      if (m) try { return JSON.parse(m[0]); } catch (e) { }
+      throw new Error("JSON ayrıştırılamadı: " + text.slice(0, 200));
+    }
+    function aiTimer(el) {
+      const t0 = Date.now();
+      const iv = setInterval(() => {
+        const s = Math.floor((Date.now() - t0) / 1000);
+        const span = el.querySelector(".ai-sec");
+        if (span) span.textContent = s + "s";
+      }, 1000);
+      return { stop() { clearInterval(iv); } };
+    }
+
+    // --- Global AI Mutex/Queue ---
+    const aiQueue = {
+      _busy: false,
+      _queue: [],
+      _activeTask: null, // {tab:"ozet",label:"Özet",idx:null} gibi
+
+      lockAllButtons(activeBtn) {
+        document.querySelectorAll('.btn.ai').forEach(btn => {
+          btn.disabled = true;
+          if (btn !== activeBtn) {
+            btn.setAttribute('data-ai-blocked', 'true');
+          }
+        });
+      },
+
+      unlockAllButtons() {
+        document.querySelectorAll('.btn.ai').forEach(btn => {
+          btn.disabled = !ollamaOnline;
+          btn.removeAttribute('data-ai-blocked');
+        });
+      },
+
+      async run(taskFn, activeBtn, taskInfo) {
+        return new Promise((resolve, reject) => {
+          const execute = async () => {
+            this._busy = true;
+            this._activeTask = taskInfo || null;
+            this.lockAllButtons(activeBtn || null);
+            try {
+              const result = await taskFn();
+              resolve(result);
+            } catch (e) {
+              reject(e);
+            } finally {
+              this._busy = false;
+              this._activeTask = null;
+              if (this._queue.length > 0) {
+                const next = this._queue.shift();
+                next();
+              } else {
+                this.unlockAllButtons();
+              }
+            }
+          };
+
+          if (this._busy) {
+            this._queue.push(execute);
+          } else {
+            execute();
+          }
+        });
+      }
+    };
+
+    function setOllamaStatus(ok, msg) {
+      ollamaOnline = ok;
+      const pill = document.getElementById("ollama-status");
+      pill.className = "status-pill" + (ok ? " ok" : "");
+      pill.querySelector("span").textContent = msg;
+      document.getElementById("ollama-banner").classList.toggle("show", !ok);
+      document.querySelectorAll(".btn.ai").forEach(b => { b.disabled = !ok; });
+    }
+    async function ollamaChat(messages, opts = {}) {
+      if (!ollamaOnline) { showToast("Ollama bağlı değil", "err"); throw new Error("offline"); }
+      const body = { model: appState.ayarlar.model, messages, stream: true, think: opts.think !== undefined ? opts.think : true };
+      if (opts.json) body.format = "json";
+      if (opts.options) body.options = opts.options;
+      console.log("[Ollama] istek gönderiliyor (stream)", body);
+      try {
+        const r = await fetch(appState.ayarlar.ollamaUrl + "/api/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body)
+        });
+        if (!r.ok) {
+          const txt = await r.text().catch(() => "");
+          let extra = txt.slice(0, 300);
+          if (r.status === 404 && txt.includes("model")) extra += "\n→ Ayarlar'dan doğru modeli seçin veya 'ollama pull " + appState.ayarlar.model + "' çalıştırın.";
+          throw new Error(`HTTP ${r.status}: ${extra}`);
+        }
+        const reader = r.body.getReader();
+        const decoder = new TextDecoder();
+        let content = "", buf = "";
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buf += decoder.decode(value, { stream: true });
+          const lines = buf.split("\n");
+          buf = lines.pop();
+          for (const line of lines) {
+            if (!line.trim()) continue;
+            try {
+              const chunk = JSON.parse(line);
+              if (chunk.message && chunk.message.content) content += chunk.message.content;
+            } catch (e) { }
+          }
+        }
+        if (buf.trim()) { try { const chunk = JSON.parse(buf); if (chunk.message && chunk.message.content) content += chunk.message.content; } catch (e) { } }
+        content = content.replace(/<think>[\s\S]*?<\/think>/g, "").trim();
+        console.log("[Ollama] yanıt (stream tamamlandı)", content.slice(0, 200));
+        if (!content) throw new Error("Boş yanıt — model içerik üretemedi.");
+        return content;
+      } catch (e) {
+        if (e.message === "Failed to fetch") throw new Error("Bağlantı/CORS hatası. Terminalde:\n  setx OLLAMA_ORIGINS \"*\"\nve Ollama'yı yeniden başlatın.");
+        throw e;
+      }
+    }
+    async function listOllamaModels() {
+      try {
+        const r = await fetch(appState.ayarlar.ollamaUrl + "/api/tags", { signal: AbortSignal.timeout(4000) });
+        const data = await r.json();
+        return (data.models || []).map(m => m.name);
+      } catch (e) { console.warn("[Ollama] listOllamaModels", e); return []; }
+    }
+
+    // Diagnostic test — calls /api/tags and /api/chat with a minimal prompt
+    async function diagnoseOllama() {
+      const lines = [];
+      lines.push(`URL: ${appState.ayarlar.ollamaUrl}`);
+      lines.push(`Beklenen model: ${appState.ayarlar.model}`);
+      // Test 1: /api/tags
+      try {
+        const r = await fetch(appState.ayarlar.ollamaUrl + "/api/tags", { signal: AbortSignal.timeout(5000) });
+        lines.push(`✓ /api/tags HTTP ${r.status}`);
+        const data = await r.json();
+        const models = (data.models || []).map(m => m.name);
+        lines.push(`  Bulunan modeller: ${models.join(", ") || "(yok)"}`);
+        if (!models.includes(appState.ayarlar.model)) {
+          lines.push(`  ⚠ Beklenen model listede yok!`);
+        }
+      } catch (e) {
+        lines.push(`✗ /api/tags HATA: ${e.name || ""} ${e.message}`);
+        if (e.message === "Failed to fetch") {
+          lines.push(`  → Olası neden: Ollama çalışmıyor veya CORS engeli.`);
+          lines.push(`  → Çözüm: 'setx OLLAMA_ORIGINS "*"' ardından Ollama'yı yeniden başlatın.`);
+        }
+        return lines.join("\n");
+      }
+      // Test 2: /api/chat with ping
+      try {
+        const r = await fetch(appState.ayarlar.ollamaUrl + "/api/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ model: appState.ayarlar.model, messages: [{ role: "user", content: "ping" }], stream: false }),
+          signal: AbortSignal.timeout(60000)
+        });
+        lines.push(`${r.ok ? "✓" : "✗"} /api/chat HTTP ${r.status}`);
+        if (!r.ok) {
+          const txt = await r.text().catch(() => "");
+          lines.push(`  Yanıt gövdesi: ${txt.slice(0, 300)}`);
+          if (r.status === 404) lines.push(`  → Model bulunamadı. 'ollama pull ${appState.ayarlar.model}' çalıştırın.`);
+        } else {
+          const data = await r.json();
+          const c = (data.message && data.message.content) || "";
+          lines.push(`  İlk 80 karakter: ${c.slice(0, 80)}`);
+          lines.push(`✓ Model çalışıyor.`);
+        }
+      } catch (e) {
+        lines.push(`✗ /api/chat HATA: ${e.name || ""} ${e.message}`);
+        if (e.name === "TimeoutError") lines.push(`  → Model çok yavaş yüklendi (60s aşıldı). İlk yüklemede normal olabilir; tekrar deneyin.`);
+        if (e.message === "Failed to fetch") lines.push(`  → POST için CORS engellendi. OLLAMA_ORIGINS env değişkenini ayarlayın.`);
+      }
+      return lines.join("\n");
+    }
+    window.diagnoseOllama = diagnoseOllama;
+
+    // File → base64
+    function fileToBase64(file) {
+      return new Promise((res, rej) => {
+        const r = new FileReader();
+        r.onload = () => {
+          const img = new Image();
+          img.onload = () => {
+            const MAX = 768;
+            let w = img.width, h = img.height;
+            if (w > MAX || h > MAX) { const s = MAX / Math.max(w, h); w = Math.round(w * s); h = Math.round(h * s); }
+            const cv = document.createElement("canvas"); cv.width = w; cv.height = h;
+            cv.getContext("2d").drawImage(img, 0, 0, w, h);
+            res(cv.toDataURL("image/jpeg", 0.8).split(",")[1]);
+          };
+          img.onerror = rej;
+          img.src = r.result;
+        };
+        r.onerror = rej;
+        r.readAsDataURL(file);
+      });
+    }
+    async function pdfFirstPageBase64(file) {
+      // PDF.js ile ilk sayfayı canvas'a render et — CDN'den yüklenene kadar bekle
+      for (let i = 0; i < 20 && !window.__pdfjs; i++) { await new Promise(r => setTimeout(r, 500)); }
+      if (!window.__pdfjs) throw new Error("PDF.js yüklenemedi – lütfen sayfayı yenileyin.");
+      const buf = await file.arrayBuffer();
+      const pdf = await window.__pdfjs.getDocument({ data: buf }).promise;
+      const page = await pdf.getPage(1);
+      const vp = page.getViewport({ scale: 1.0 });
+      const cv = document.createElement("canvas");
+      cv.width = vp.width; cv.height = vp.height;
+      await page.render({ canvasContext: cv.getContext("2d"), viewport: vp }).promise;
+      const MAX = 768; let w = cv.width, h = cv.height;
+      if (w > MAX || h > MAX) { const s = MAX / Math.max(w, h); const cv2 = document.createElement("canvas"); cv2.width = Math.round(w * s); cv2.height = Math.round(h * s); cv2.getContext("2d").drawImage(cv, 0, 0, cv2.width, cv2.height); return cv2.toDataURL("image/jpeg", 0.8).split(",")[1]; }
+      return cv.toDataURL("image/jpeg", 0.8).split(",")[1];
+    }
+
+    // =================== UI HELPERS ===================
+    function el(tag, cls, html) { const e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; }
+
+    function createSearchableDropdown(opts) {
+      // opts: items[], value, onChange, placeholder, allowCustom, multi
+      const wrap = el("div", "sdd");
+      wrap.style.position = "relative";
+      const input = el("input"); input.className = "sdd-input"; input.placeholder = opts.placeholder || "Ara...";
+      if (opts.multi) input.style.paddingRight = "65px";
+
+      if (opts.multi && Array.isArray(opts.value)) input.value = opts.value.join(", ") + (opts.value.length ? ", " : "");
+      else input.value = opts.value || "";
+
+      const menu = el("div", "sdd-menu");
+      wrap.appendChild(input);
+
+      if (opts.multi) {
+        const clr = el("div", null, "Temizle");
+        clr.style.cssText = "position:absolute;right:8px;top:50%;transform:translateY(-50%);font-size:10px;color:#666;cursor:pointer;background:#eee;padding:3px 6px;border-radius:4px;font-weight:600;z-index:2;box-shadow:0 1px 2px rgba(0,0,0,0.1)";
+        clr.onmousedown = (e) => {
+          e.preventDefault(); e.stopPropagation();
+          input.value = "";
+          render();
+          if (opts.onChange) opts.onChange([]);
+        };
+        wrap.appendChild(clr);
+      }
+
+      wrap.appendChild(menu);
+      const items = opts.items.map(it => typeof it === "string" ? { label: it } : it);
+
+      function getTokens() {
+        return input.value.split(',').map(s => s.trim()).filter(x => x);
+      }
+
+      function getSearchTerm() {
+        if (!opts.multi) return (input.value || "").toLowerCase().trim();
+        if (input.value.endsWith(",") || input.value.endsWith(", ")) return "";
+        return (input.value.split(',').pop() || "").toLowerCase().trim();
+      }
+
+      function render() {
+        menu.innerHTML = "";
+        const f = getSearchTerm();
+        const tokens = opts.multi ? getTokens() : [];
+        const matches = items.filter(it => !f || it.label.toLowerCase().includes(f)).slice(0, 800);
+        if (!matches.length) {
+          menu.appendChild(el("div", "sdd-empty", "Eşleşme yok" + (opts.allowCustom ? " — Enter ile ekle" : "")));
+          return;
+        }
+        matches.forEach(it => {
+          const isSel = opts.multi && tokens.includes(it.label);
+          const d = el("div", "sdd-item" + (isSel ? " selected" : ""), it.label + (isSel ? " <span style='float:right;color:var(--cv-accent);font-weight:bold'>✓</span>" : "") + (it.meta ? `<span class="meta">${it.meta}</span>` : ""));
+          if (isSel) { d.style.background = "rgba(0,0,0,0.03)"; d.style.fontWeight = "600"; }
+          d.onclick = (e) => {
+            e.stopPropagation();
+            if (opts.multi) {
+              let vals = getTokens();
+              if (!input.value.endsWith(",") && !input.value.endsWith(", ")) vals.pop();
+              if (vals.includes(it.label)) vals = vals.filter(v => v !== it.label);
+              else vals.push(it.label);
+              input.value = vals.length ? vals.join(", ") + ", " : "";
+              render();
+              if (opts.onChange) opts.onChange(getTokens());
+              input.focus();
+            } else {
+              input.value = it.label;
+              menu.classList.remove("open");
+              if (opts.onChange) opts.onChange(it.label);
+            }
+          };
+          menu.appendChild(d);
+        });
+      }
+      input.onfocus = () => { render(); menu.classList.add("open"); };
+      input.oninput = () => {
+        render();
+        menu.classList.add("open");
+        if (opts.onChange && opts.allowCustom) opts.onChange(opts.multi ? getTokens() : input.value);
+      };
+      input.onkeydown = (e) => { if (e.key === "Enter") { if (opts.allowCustom) { if (opts.onChange) opts.onChange(opts.multi ? getTokens() : input.value); } menu.classList.remove("open"); } if (e.key === "Escape") menu.classList.remove("open"); };
+      document.addEventListener("click", e => { if (!wrap.contains(e.target)) menu.classList.remove("open"); });
+      return wrap;
+    }
+
+    function createChipGroup(items, selected, onChange, opts = {}) {
+      const wrap = el("div", "chip-group");
+      const sel = new Set(selected || []);
+      function render() {
+        wrap.innerHTML = "";
+        items.forEach(it => {
+          const lbl = typeof it === "string" ? it : it.label;
+          const c = el("div", "chip" + (sel.has(lbl) ? " active" : ""), lbl);
+          c.onclick = () => {
+            if (opts.multi === false) { sel.clear(); sel.add(lbl); }
+            else { if (sel.has(lbl)) sel.delete(lbl); else sel.add(lbl); }
+            render();
+            if (onChange) onChange([...sel]);
+          };
+          wrap.appendChild(c);
+        });
+        if (opts.allowAdd) {
+          const inp = el("input"); inp.placeholder = "+ Ekle ve Enter"; inp.style.cssText = "background:transparent;border:none;flex:1;min-width:100px;padding:4px";
+          inp.onkeydown = e => { if (e.key === "Enter" && inp.value.trim()) { sel.add(inp.value.trim()); inp.value = ""; render(); if (onChange) onChange([...sel]); } };
+          wrap.appendChild(inp);
+        }
+      }
+      render();
+      return wrap;
+    }
+
+    function createMonthYearPicker(value, onChange) {
+      // value:{ay,yil}
+      const wrap = el("div"); wrap.style.cssText = "display:grid;grid-template-columns:1fr 1fr;gap:8px";
+      const aySel = el("select");["", "Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"].forEach((m, i) => { const o = el("option"); o.value = i ? i : ""; o.textContent = m || "Ay"; aySel.appendChild(o); });
+      aySel.value = value.ay || "";
+      const yilSel = el("select"); const o0 = el("option"); o0.value = ""; o0.textContent = "Yıl"; yilSel.appendChild(o0);
+      const yilNow = new Date().getFullYear();
+      for (let y = yilNow + 5; y >= 1990; y--) { const o = el("option"); o.value = y; o.textContent = y; yilSel.appendChild(o); }
+      yilSel.value = value.yil || "";
+      aySel.onchange = () => onChange({ ay: aySel.value, yil: yilSel.value });
+      yilSel.onchange = () => onChange({ ay: aySel.value, yil: yilSel.value });
+      wrap.appendChild(aySel); wrap.appendChild(yilSel);
+      return wrap;
+    }
+
+    function createCollapsible(title, bodyRender, countFn, opts = {}) {
+      const c = el("div", "collapsible" + (opts.initialOpen ? " open" : ""));
+      const h = el("div", "collapsible-h");
+      h.innerHTML = `<span>${title} <span class="count">${countFn ? countFn() : ""}</span></span><span class="arr">›</span>`;
+      const body = el("div", "collapsible-body");
+      bodyRender(body);
+      h.onclick = () => {
+        const wasOpen = c.classList.toggle("open");
+        if (opts.onToggle) opts.onToggle(wasOpen);
+      };
+      c.appendChild(h); c.appendChild(body);
+      return c;
+    }
+
+    // =================== TABS ===================
+    const TABS = [
+      { id: "profil", num: "01", label: "Profil" },
+      { id: "egitim", num: "02", label: "Eğitim" },
+      { id: "deneyim", num: "03", label: "Deneyim" },
+      { id: "projeler", num: "04", label: "Projeler" },
+      { id: "beceriler", num: "05", label: "Beceriler" },
+      { id: "sertifikalar", num: "06", label: "Sertifikalar" },
+      { id: "gonulluluk", num: "07", label: "Gönüllülük" },
+      { id: "ozet", num: "08", label: "Özet" }
+    ];
+    function renderTabs() {
+      const c = document.getElementById("tabs"); c.innerHTML = "";
+      TABS.forEach(t => {
+        const b = el("button", "tab" + (activeTab === t.id ? " active" : ""), `<span class="num">${t.num}</span>${t.label}`);
+        b.onclick = () => { activeTab = t.id; renderTabs(); renderActiveTab(); };
+        c.appendChild(b);
+      });
+    }
+    function renderActiveTab() {
+      const c = document.getElementById("tab-content"); c.innerHTML = "";
+      const renderers = { profil: renderProfil, egitim: renderEgitim, deneyim: renderDeneyim, projeler: renderProjeler, beceriler: renderBeceriler, sertifikalar: renderSertifikalar, gonulluluk: renderGonulluluk, ozet: renderOzet };
+      renderers[activeTab](c);
+      // AI mesgulse yeni olusturulan butonlari tekrar kilitle
+      if (aiQueue._busy) { aiQueue.lockAllButtons(null); }
+    }
+
+    // ----- TAB 1: PROFİL -----
+    function renderProfil(c) {
+      c.appendChild(el("h2", "tab-title", "Profil Bilgileri"));
+      c.appendChild(el("p", "tab-sub", "Temel iletişim bilgileri ve hedef pozisyon — manuel giriş minimumda."));
+      const p = appState.profile;
+      const row1 = el("div", "field-row");
+      row1.appendChild(field("Ad", input(p.ad, v => { p.ad = v; saveState(); })));
+      row1.appendChild(field("Soyad", input(p.soyad, v => { p.soyad = v; saveState(); })));
+      c.appendChild(row1);
+
+      c.appendChild(field("E-posta", input(p.email, v => { p.email = v; saveState(); }, "ornek@mail.com", "email")));
+
+      const telWrap = el("div", "field-row");
+      const ccSel = el("select"); ULKE_KODLARI.forEach(k => { const o = el("option"); o.value = k.c; o.textContent = `${k.c} (${k.n})`; ccSel.appendChild(o); }); ccSel.value = p.phoneCC; ccSel.onchange = () => { p.phoneCC = ccSel.value; saveState(); };
+      telWrap.appendChild(field("Ülke Kodu", ccSel));
+      telWrap.appendChild(field("Telefon", input(p.phone, v => { p.phone = v; saveState(); }, "5XX XXX XX XX", "tel")));
+      c.appendChild(telWrap);
+
+      const sehirWrap = field("Şehir", createSearchableDropdown({ items: SEHIRLER, value: p.sehir, placeholder: "Şehir ara...", onChange: v => { p.sehir = v; saveState(); } }));
+      const ulkeWrap = field("Ülke", createSearchableDropdown({ items: ULKELER, value: p.ulke, placeholder: "Ülke seç...", onChange: v => { p.ulke = v; saveState(); } }));
+      const lr = el("div", "field-row"); lr.appendChild(sehirWrap); lr.appendChild(ulkeWrap); c.appendChild(lr);
+
+      const lr2 = el("div", "field-row-3");
+      lr2.appendChild(field("LinkedIn", input(p.linkedin, v => { p.linkedin = v; saveState(); }, "linkedin.com/in/...")));
+      lr2.appendChild(field("GitHub", input(p.github, v => { p.github = v; saveState(); }, "github.com/...")));
+      lr2.appendChild(field("Portföy", input(p.portfolio, v => { p.portfolio = v; saveState(); }, "https://...")));
+      c.appendChild(lr2);
+
+      // Tab 1 UI
+      c.appendChild(field("Hedef Pozisyon", createSearchableDropdown({ items: HEDEF_POZISYONLAR, value: p.hedefPozisyon, multi: true, allowCustom: true, placeholder: "Hedef pozisyon seç veya yaz...", onChange: v => { p.hedefPozisyon = v; saveState(); } })));
+      c.appendChild(field("Hedef Sektör", createSearchableDropdown({ items: SEKTORLER, value: p.hedefSektor, multi: true, allowCustom: true, placeholder: "Sektör seç veya yaz...", onChange: v => { p.hedefSektor = v; saveState(); } })));
+
+      c.appendChild(field("CV Dili", createChipGroup(["Türkçe", "İngilizce", "Her İkisi"], [{ tr: "Türkçe", en: "İngilizce", both: "Her İkisi" }[appState.meta.lang]], v => { const m = { "Türkçe": "tr", "İngilizce": "en", "Her İkisi": "both" }; appState.meta.lang = m[v[0]] || "tr"; document.getElementById("tpl-lang").value = appState.meta.lang; saveState(); renderPreview(); }, { multi: false })));
+    }
+
+    function field(label, inputEl) {
+      const f = el("div", "field");
+      f.appendChild(el("label", null, label));
+      f.appendChild(inputEl);
+      return f;
+    }
+    function input(value, onChange, placeholder, type) {
+      const i = el("input"); i.value = value || ""; if (placeholder) i.placeholder = placeholder; if (type) i.type = type;
+      i.oninput = () => onChange(i.value);
+      return i;
+    }
+    function textarea(value, onChange, placeholder) {
+      const t = el("textarea"); t.value = value || ""; if (placeholder) t.placeholder = placeholder;
+      t.oninput = () => onChange(t.value);
+      return t;
+    }
+
+    // ----- TAB 2: EĞİTİM -----
+    function renderEgitim(c) {
+      c.appendChild(el("h2", "tab-title", "Eğitim"));
+      c.appendChild(el("p", "tab-sub", "Üniversite, bölüm ve önemli dersleri seçim ile ekleyin."));
+      appState.egitim.forEach((e, idx) => {
+        const card = el("div", "card");
+        const h = el("div", "card-h");
+        h.appendChild(el("h3", null, `Eğitim #${idx + 1}`));
+        const acts = el("div", "card-actions");
+        const del = el("button", "icon-btn del", "✕"); del.onclick = () => { appState.egitim.splice(idx, 1); saveState(); renderActiveTab(); };
+        acts.appendChild(del); h.appendChild(acts); card.appendChild(h);
+
+        card.appendChild(field("Üniversite", createSearchableDropdown({ items: TR_UNIVERSITELERI.map(u => ({ label: u.n, meta: u.t })), value: e.universite, allowCustom: true, placeholder: "Üniversite ara...", onChange: v => { e.universite = v; saveState(); } })));
+
+        const bolumItems = BOLUMLER_BY_DERECE[e.derece || "Lisans"] || BOLUMLER_BY_DERECE["Lisans"];
+        card.appendChild(field("Bölüm", createSearchableDropdown({ items: bolumItems, value: e.bolum, allowCustom: true, placeholder: "Bölüm seç...", onChange: v => { e.bolum = v; saveState(); renderActiveTab(); } })));
+
+        const r = el("div", "field-row-3");
+        const drcSel = el("select");["Lise", "Ön Lisans", "Lisans", "Yüksek Lisans", "Doktora"].forEach(d => { const o = el("option"); o.value = d; o.textContent = d; drcSel.appendChild(o); }); drcSel.value = e.derece || "Lisans"; drcSel.onchange = () => {
+          e.derece = drcSel.value;
+          // Clear bolum if it doesn't exist in the new degree's list
+          const newList = BOLUMLER_BY_DERECE[e.derece] || [];
+          if (e.bolum && !newList.includes(e.bolum)) e.bolum = "";
+          saveState(); renderActiveTab();
+        };
+        r.appendChild(field("Derece", drcSel));
+        const yilNow = new Date().getFullYear();
+        const basSel = el("select"); for (let y = yilNow + 5; y >= 1990; y--) { const o = el("option"); o.value = y; o.textContent = y; basSel.appendChild(o); } basSel.value = e.baslangic || yilNow - 3; basSel.onchange = () => { e.baslangic = basSel.value; saveState(); };
+        r.appendChild(field("Başlangıç", basSel));
+        const bitSel = el("select"); const o0 = el("option"); o0.value = "Devam"; o0.textContent = "Devam"; bitSel.appendChild(o0); for (let y = yilNow + 5; y >= 1990; y--) { const o = el("option"); o.value = y; o.textContent = y; bitSel.appendChild(o); } bitSel.value = e.bitis || "Devam"; bitSel.onchange = () => { e.bitis = bitSel.value; saveState(); };
+        r.appendChild(field("Bitiş", bitSel));
+        card.appendChild(r);
+
+        card.appendChild(field("GPA (opsiyonel, X.XX/4.00)", input(e.gpa, v => { e.gpa = v; saveState(); }, "3.45")));
+
+        const dersListesi = BOLUM_DERSLERI[e.bolum] || [];
+        if (dersListesi.length) {
+          card.appendChild(field("Önemli Dersler (chip seçimi)", createChipGroup(dersListesi, e.dersler, v => { e.dersler = v; saveState(); })));
+        } else {
+          const inf = el("div", "hint", "Bölüm seçince ders listesi açılır."); card.appendChild(inf);
+        }
+        card.appendChild(field("Burs / Onur", createChipGroup(BURS_ONUR, e.onurlar, v => { e.onurlar = v; saveState(); })));
+        c.appendChild(card);
+      });
+      const add = el("button", "add-card", "+ Eğitim Ekle");
+      add.onclick = () => { appState.egitim.push({ universite: "", bolum: "", derece: "Lisans", baslangic: "", bitis: "Devam", gpa: "", dersler: [], onurlar: [] }); saveState(); renderActiveTab(); };
+      c.appendChild(add);
+    }
+
+    // ----- TAB 3: DENEYİM -----
+    function renderDeneyim(c) {
+      c.appendChild(el("h2", "tab-title", "Deneyim & Staj"));
+      c.appendChild(el("p", "tab-sub", "Pozisyona göre hızlı görev seçimi yap, kaba notunu yaz, AI ile STAR formatına dönüştür."));
+      appState.deneyim.forEach((d, idx) => {
+        const card = el("div", "card");
+        const h = el("div", "card-h"); h.appendChild(el("h3", null, `Deneyim #${idx + 1}`));
+        const acts = el("div", "card-actions");
+        const del = el("button", "icon-btn del", "✕"); del.onclick = () => { appState.deneyim.splice(idx, 1); saveState(); renderActiveTab(); };
+        acts.appendChild(del); h.appendChild(acts); card.appendChild(h);
+
+        card.appendChild(field("Şirket", createSearchableDropdown({ items: SIRKET_LISTESI, value: d.sirket, allowCustom: true, placeholder: "Şirket ara veya yaz...", onChange: v => { d.sirket = v; saveState(); } })));
+
+        card.appendChild(field("Pozisyon", createSearchableDropdown({ items: DENEYIM_POZISYONLARI, value: d.pozisyon, allowCustom: true, placeholder: "Pozisyon ara veya yaz...", onChange: v => { d.pozisyon = v; saveState(); renderActiveTab(); } })));
+
+        card.appendChild(field("Çalışma Türü", createChipGroup(["Staj", "Part-time", "Tam zamanlı", "Gönüllü", "Freelance"], d.tur ? [d.tur] : [], v => { d.tur = v[0]; saveState(); }, { multi: false })));
+
+        const r = el("div", "field-row");
+        r.appendChild(field("Şehir", createSearchableDropdown({ items: SEHIRLER, value: d.sehir, placeholder: "Şehir...", onChange: v => { d.sehir = v; saveState(); } })));
+        r.appendChild(el("div", "field"));
+        card.appendChild(r);
+
+        const tr = el("div", "field-row");
+        const tw1 = el("div", "field"); tw1.appendChild(el("label", null, "Başlangıç (Ay/Yıl)"));
+        tw1.appendChild(createMonthYearPicker({ ay: d.basAy, yil: d.basYil }, v => { d.basAy = v.ay; d.basYil = v.yil; saveState(); }));
+        tr.appendChild(tw1);
+        const tw2 = el("div", "field"); tw2.appendChild(el("label", null, "Bitiş (Ay/Yıl)"));
+        tw2.appendChild(createMonthYearPicker({ ay: d.bitAy, yil: d.bitYil }, v => { d.bitAy = v.ay; d.bitYil = v.yil; saveState(); }));
+        tr.appendChild(tw2);
+        card.appendChild(tr);
+
+        const gorevList = POZISYON_GOREVLERI[d.pozisyon] || [];
+        if (gorevList.length) {
+          card.appendChild(field("Hızlı Görev Seçici (chip)", createChipGroup(gorevList, d.gorevChips, v => { d.gorevChips = v; saveState(); })));
+        }
+        card.appendChild(field("Ham Açıklama / Notlar", textarea(d.hamNot, v => { d.hamNot = v; saveState(); }, "Yaptığın işleri kaba bir şekilde yaz, AI bunu STAR formatına dönüştürecek...")));
+
+        const aiBtn = el("button", "btn ai", "⚡ STAR ile Güçlendir");
+        if (aiQueue._activeTask && aiQueue._activeTask.tab === "deneyim" && aiQueue._activeTask.idx === idx) {
+          aiBtn.innerHTML = '<span class="thinking">AI düşünüyor… <span class="ai-sec"></span></span>'; aiBtn.disabled = true; aiTimer(aiBtn);
+        }
+        aiBtn.onclick = async () => {
+          aiBtn.innerHTML = '<span class="thinking">AI düşünüyor… <span class="ai-sec">0s</span></span>'; const _t = aiTimer(aiBtn);
+          try {
+            await aiQueue.run(async () => {
+              const prompt = `Görev: Aşağıdaki staj/iş deneyimini kendi ağzımdan, kendi CV'me yazacağım şekilde bullet point'lere dönüştür.
+
+ROL: Sen, CV'sinin deneyim bölümünü kendi yazan bir mühendislik öğrencisisin. Doğal, özgüvenli, abartısız; şişirilmiş pazarlama dili yok. Her bullet birinci tekil şahısla, sanki ben yazmışım gibi akıyor.
+
+YAPISAL KURALLAR:
+- 4-6 adet bullet point üret.
+- Her bullet tam olarak şu formüle uysun: [Ne yaptım — birinci tekil fiil] + [Hangi araç/yöntemle] + [Bağlam veya sonuç — varsa]
+- Her bullet BİRİNCİ TEKİL GEÇMİŞ ZAMAN çekimi ile bitmeli: "-dım / -dim / -dum / -düm / -tım / -tim / -tum / -tüm" (ör: geliştirdim, tasarladım, kurdum, yürüttüm, raporladım, kalibre ettim, test ettim, optimize ettim, analiz ettim, entegre ettim, programladım, dokümante ettim).
+- Her bullet'ta farklı bir fiil kullan; aynı fiili iki kez tekrarlama.
+
+SEKTÖREL DERİNLİK ("${d.pozisyon}" alanı için):
+- Bu pozisyona özgü teknik terimleri, standartları (ISO, IEC, IEEE vb.), araç/yazılım adlarını kullan.
+- Spesifik ol: "çeşitli ekipman" yerine "15 kVA trafo" gibi somut isim.
+
+SAYILAR HAKKINDA:
+- Sayı, yüzde veya metrik SADECE adayın notlarında açıkça geçiyorsa kullan.
+- Nota yoksa sayı ya da yüzde UYDURMA. Onun yerine "düzenli olarak", "birden fazla", "ekip içinde", "periyodik şekilde" gibi nitel ifadeler kullan.
+- Her bullet'ta zorunlu bir metrik yoktur; bazı bullet'lar tamamen nitel olabilir, bu normal ve insansıdır.
+
+YASAKLAR:
+- 3. TEKİL ŞAHIS KULLANMA: "gerçekleştirdi", "yaptı", "azalttı" ASLA. Her cümle "ben" öznesiyle (açık veya çekim yoluyla) yazılmalı.
+- Kendini "aday", "stajyer olarak kendisi", "bir öğrenci" gibi 3. şahıs ifadelerle anma. Doğrudan "ben" dilinde yaz.
+- "Task:", "Action:", "Result:", "Situation:" etiketleri YAZMA. Düz bullet point yaz.
+- Çince, Japonca, Korece veya Latin harfler dışında karakter kullanma. Sadece Türkçe yaz.
+- Aynı cümleyi veya aynı başarıyı tekrar etme.
+- "Çeşitli", "farklı", "muhtelif" gibi belirsiz sıfatlar yerine spesifik ol.
+- Notlarda olmayan görev veya başarıyı icat etme.
+- Her bullet 1-2 cümle olsun, 25 kelimeyi geçmesin.
+
+ÖRNEK İYİ ÇIKTI (Elektrik Bakım Stajyeri için):
+{"bullets":["Fabrika genelindeki OG/AG panoların periyodik bakım ve kontrolünü üstlenerek arıza oranının düşmesine katkıda bulundum.","Termografik kamerayla enerji hatlarındaki hotspot noktalarını tarayarak olası arızaları ekip lideriyle birlikte önceden tespit ettim.","Kompanzasyon sistemlerinin röle ayarlarını yaparak reaktif enerji tüketimini izledim ve raporladım.","Topraklama direnci ölçümlerini IEC 60364 standardına göre yürüttüm ve yıllık periyodik kontrol raporunu hazırladım."]}
+
+ÖRNEK İYİ ÇIKTI (Yazılım Geliştirici Stajyeri için):
+{"bullets":["React ve Node.js kullanarak şirket içi envanter takip sisteminin frontend modülünü sıfırdan geliştirdim.","REST API üzerinden ERP sistemine bağlanan veri senkronizasyon modülünü tasarlayarak manuel veri girişini azalttım.","Jest ve Cypress ile birim ve entegrasyon testleri yazdım; test kapsama oranını artırmak için ekibe düzenli katkı verdim.","Git flow stratejisi ve CI/CD pipeline kurulumuna katıldım; deployment sürecini kısaltmak için yaml konfigürasyonlarını güncelledim."]}
+
+Şimdi aşağıdaki deneyim için bullet point yaz. SADECE JSON döndür, başka bir şey yazma: {"bullets":["...","..."]}
+
+Şirket: ${d.sirket}
+Pozisyon: ${d.pozisyon}
+Görevler: ${(d.gorevChips || []).join(", ")}
+Notlar: ${d.hamNot || "Genel staj görevleri"}`;
+              const out = await ollamaChat([{ role: "user", content: prompt }], { json: true });
+              const parsed = extractJSON(out);
+              d.bullets = parsed.bullets || [];
+              _t.stop(); showToast("Bullet'lar oluşturuldu", "ok");
+              saveState(); renderActiveTab();
+            }, aiBtn, { tab: "deneyim", idx: idx, label: "STAR" });
+          } catch (e) { _t.stop(); console.error(e); showToast("AI hata: " + e.message, "err"); aiBtn.disabled = false; aiBtn.textContent = "⚡ STAR ile Güçlendir"; }
+        };
+        card.appendChild(aiBtn);
+
+        if (d.bullets && d.bullets.length) {
+          const ul = el("ul"); ul.style.cssText = "margin-top:12px;padding-left:18px";
+          d.bullets.forEach(b => { const li = el("li", null, b); li.style.cssText = "font-size:12px;color:var(--good);margin-bottom:4px"; ul.appendChild(li); });
+          card.appendChild(ul);
+        }
+        c.appendChild(card);
+      });
+      const add = el("button", "add-card", "+ Deneyim Ekle");
+      add.onclick = () => { appState.deneyim.push({ sirket: "", pozisyon: "", tur: "Staj", sehir: "", basAy: "", basYil: "", bitAy: "", bitYil: "", gorevChips: [], hamNot: "", bullets: [] }); saveState(); renderActiveTab(); };
+      c.appendChild(add);
+    }
+
+    // ----- TAB 4: PROJELER -----
+    function renderProjeler(c) {
+      c.appendChild(el("h2", "tab-title", "Projeler"));
+      c.appendChild(el("p", "tab-sub", "Akademik, kişisel ve yarışma projelerinizi ekleyin. AI ile profesyonel açıklamaya dönüştürün."));
+      const allTechs = Object.values(TEKNOLOJILER).flat();
+      appState.projeler.forEach((p, idx) => {
+        const card = el("div", "card");
+        const h = el("div", "card-h"); h.appendChild(el("h3", null, `Proje #${idx + 1}`));
+        const acts = el("div", "card-actions");
+        const del = el("button", "icon-btn del", "✕"); del.onclick = () => { appState.projeler.splice(idx, 1); saveState(); renderActiveTab(); };
+        acts.appendChild(del); h.appendChild(acts); card.appendChild(h);
+
+        card.appendChild(field("Proje Adı", input(p.ad, v => { p.ad = v; saveState(); })));
+        card.appendChild(field("Proje Türü", createChipGroup(["Mezuniyet Projesi", "Kişisel Proje", "Akademik Proje", "Yarışma", "Açık Kaynak Katkısı", "Hackathon", "Staj Projesi"], p.tur, v => { p.tur = v; saveState(); })));
+        card.appendChild(field("Teknolojiler (chip + serbest yazma)", createChipGroup(allTechs, p.teknolojiler, v => { p.teknolojiler = v; saveState(); }, { allowAdd: true })));
+        card.appendChild(field("Ham Açıklama", textarea(p.hamAciklama, v => { p.hamAciklama = v; saveState(); }, "Projenin ne yaptığını ve nasıl yaptığını kabaca yaz...")));
+
+        const lr = el("div", "field-row");
+        lr.appendChild(field("GitHub URL", input(p.githubUrl, v => { p.githubUrl = v; saveState(); }, "github.com/...")));
+        lr.appendChild(field("Demo URL", input(p.demoUrl, v => { p.demoUrl = v; saveState(); })));
+        card.appendChild(lr);
+
+        const aiBtn = el("button", "btn ai", "⚡ Projeyi Güçlendir");
+        if (aiQueue._activeTask && aiQueue._activeTask.tab === "projeler" && aiQueue._activeTask.idx === idx) {
+          aiBtn.innerHTML = '<span class="thinking">AI düşünüyor… <span class="ai-sec"></span></span>'; aiBtn.disabled = true; aiTimer(aiBtn);
+        }
+        aiBtn.onclick = async () => {
+          aiBtn.innerHTML = '<span class="thinking">AI düşünüyor… <span class="ai-sec">0s</span></span>'; const _t = aiTimer(aiBtn);
+          try {
+            await aiQueue.run(async () => {
+              const prompt = `ROL: Sen, teknik projeleri değerlendiren ve CV için optimize eden bir kıdemli mühendis ve kariyer koçusun.
+
+GÖREV: Aşağıdaki proje açıklamasını profesyonel, ATS uyumlu, teknik derinliği olan bir CV özetine dönüştür.
+
+YAPI:
+- Tam olarak 2-4 cümle yaz.
+- 1. cümle: Projenin ne olduğunu ve hangi problemi çözdüğünü net şekilde açıkla. Aksiyon fiiliyle başla (Geliştirdi, Tasarladı, İmplemente Etti vb.)
+- 2. cümle: Kullanılan teknolojileri ve mimari yaklaşımı belirt (framework, kütüphane, protokol, donanım vb.)
+- 3. cümle (varsa): Somut çıktıyı veya teknik başarıyı vurgula (performans metrikleri, kullanıcı sayısı, kazanılan ödül vb.)
+- 4. cümle (opsiyonel): Projenin etkisini veya öğrenilen kritik beceriyi belirt.
+
+TEKNİK DERİNLİK KURALLARI:
+- Kullanılan teknolojilerin her birini teknik bağlamında kullan (sadece isim listesi değil, ne için kullanıldığını belirt).
+- Mümkünse mimari kararları vurgula (ör: "mikroservis mimarisi", "event-driven tasarım", "RTOS tabanlı" vb.)
+- Proje türüne göre uygun metrikler ekle: yazılım için (response time, uptime, test coverage), donanım için (hassasiyet, güç tüketimi, çalışma frekansı), veri için (veri boyutu, model accuracy).
+
+YASAKLAR:
+- Projeyle ilgisi olmayan teknoloji veya başarı icat etme.
+- "Çeşitli teknolojiler kullanıldı" gibi belirsiz ifadeler kullanma.
+- Sadece Türkçe yaz, yabancı dil karakter kullanma.
+
+SADECE JSON döndür: {"aciklama":"..."}
+
+Proje: ${p.ad}
+Tür: ${(p.tur || []).join(", ")}
+Teknolojiler: ${p.teknolojiler.join(", ")}
+Notlar: ${p.hamAciklama}`;
+              const out = await ollamaChat([{ role: "user", content: prompt }], { json: true });
+              const parsed = extractJSON(out);
+              p.aiAciklama = parsed.aciklama || "";
+              _t.stop(); showToast("Proje güçlendirildi", "ok");
+              saveState(); renderActiveTab();
+            }, aiBtn, { tab: "projeler", idx: idx, label: "Proje" });
+          } catch (e) { _t.stop(); console.error(e); showToast("AI hata: " + e.message, "err"); aiBtn.disabled = false; aiBtn.textContent = "⚡ Projeyi Güçlendir"; }
+        };
+        card.appendChild(aiBtn);
+
+        if (p.aiAciklama) {
+          const box = el("div", null, p.aiAciklama);
+          box.style.cssText = "margin-top:12px;padding:12px;background:rgba(95,211,138,.08);border-left:3px solid var(--good);border-radius:6px;font-size:12px;color:var(--good)";
+          card.appendChild(box);
+        }
+        c.appendChild(card);
+      });
+      const add = el("button", "add-card", "+ Proje Ekle");
+      add.onclick = () => { appState.projeler.push({ ad: "", tur: [], teknolojiler: [], hamAciklama: "", githubUrl: "", demoUrl: "", aiAciklama: "" }); saveState(); renderActiveTab(); };
+      c.appendChild(add);
+    }
+
+    // ----- TAB 5: BECERİLER -----
+    function renderBeceriler(c) {
+      c.appendChild(el("h2", "tab-title", "Beceriler"));
+      c.appendChild(el("p", "tab-sub", "Tüm beceriler chip ile seçilir. Manuel yazı yok."));
+
+      const BECERI_STATE_MAP = {
+        "Programlama Dilleri": "programlama",
+        "Mikrodenetleyici / Gömülü": "gomulu",
+        "Haberleşme & Protokoller": "protokoller",
+        "Donanım Tasarımı (EDA/PCB)": "eda",
+        "CAD & 3D Modelleme": "cad",
+        "IDE & Geliştirme Ortamları": "ide",
+        "Test, Analiz & Simülasyon": "test",
+        "Versiyon Kontrol & DevOps": "devops",
+        "İşletim Sistemleri": "os",
+        "Veritabanı Sistemleri": "veritabani",
+        "Ofis & İş Yönetimi": "ofis",
+        "Güç / Enerji / Otomasyon": "guc"
+      };
+
+      const totalSel = Object.entries(BECERI_KATALOG).reduce((s, [k]) => {
+        return s + (appState.beceriler[BECERI_STATE_MAP[k]] || []).length;
+      }, 0);
+      const counter = el("div", "skill-counter", `Seçili: <b>${totalSel}</b> teknik beceri`);
+      c.appendChild(counter);
+
+      Object.entries(BECERI_KATALOG).forEach(([cat, items]) => {
+        const stateKey = BECERI_STATE_MAP[cat];
+        const countSpanRef = { el: null };
+        const updateCount = () => {
+          if (countSpanRef.el) countSpanRef.el.textContent = (appState.beceriler[stateKey] || []).length + "/" + items.length;
+          // also refresh top counter
+          const newTotal = Object.entries(BECERI_KATALOG).reduce((s, [k]) => s + (appState.beceriler[BECERI_STATE_MAP[k]] || []).length, 0);
+          counter.innerHTML = `Seçili: <b>${newTotal}</b> teknik beceri`;
+        };
+        const coll = createCollapsible(cat, (body) => {
+          body.appendChild(createChipGroup(items, appState.beceriler[stateKey], v => {
+            appState.beceriler[stateKey] = v;
+            saveState();
+            updateCount();
+            // NOTE: do NOT call renderActiveTab — it would close the collapsible.
+            // saveState() already calls renderPreview() to refresh the right side.
+          }, { allowAdd: true }));
+        }, () => (appState.beceriler[stateKey] || []).length + "/" + items.length, {
+          initialOpen: becerilerOpenCats.has(cat),
+          onToggle: (open) => { if (open) becerilerOpenCats.add(cat); else becerilerOpenCats.delete(cat); }
+        });
+        // capture the count span ref so we can update it without re-render
+        countSpanRef.el = coll.querySelector(".count");
+        c.appendChild(coll);
+      });
+
+      // Diller
+      c.appendChild(el("h3", null, "Yabancı Diller"));
+      appState.beceriler.diller.forEach((d, idx) => {
+        const r = el("div"); r.style.cssText = "display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:8px;margin-bottom:8px;align-items:end";
+        const dilSel = el("select"); DILLER.forEach(dl => { const o = el("option"); o.value = dl; o.textContent = dl; dilSel.appendChild(o); }); dilSel.value = d.dil || "İngilizce"; dilSel.onchange = () => { d.dil = dilSel.value; saveState(); };
+        const sevSel = el("select"); DIL_SEVIYELERI.forEach(s => { const o = el("option"); o.value = s; o.textContent = s; sevSel.appendChild(o); }); sevSel.value = d.seviye || "B2"; sevSel.onchange = () => { d.seviye = sevSel.value; saveState(); };
+        const sin = el("input"); sin.placeholder = "Sınav (opsiyonel) ör. IELTS 7.0"; sin.value = d.sinav || ""; sin.oninput = () => { d.sinav = sin.value; saveState(); };
+        const del = el("button", "icon-btn del", "✕"); del.onclick = () => { appState.beceriler.diller.splice(idx, 1); saveState(); renderActiveTab(); };
+        r.appendChild(field("Dil", dilSel)); r.appendChild(field("Seviye", sevSel)); r.appendChild(field("Sınav", sin)); r.appendChild(del);
+        c.appendChild(r);
+      });
+      const addDil = el("button", "add-card", "+ Dil Ekle"); addDil.onclick = () => { appState.beceriler.diller.push({ dil: "İngilizce", seviye: "B2", sinav: "" }); saveState(); renderActiveTab(); };
+      c.appendChild(addDil);
+
+      c.appendChild(el("h3", null, "Soft Skills"));
+      c.appendChild(field("Sosyal ve Kişisel Beceriler", createSearchableDropdown({ items: SOFT_SKILLS, value: appState.beceriler.soft, multi: true, allowCustom: true, placeholder: "Kişisel beceri seç veya yaz...", onChange: v => { appState.beceriler.soft = v; saveState(); } })));
+      const optBtn = el("button", "btn ai", "⚡ Becerilerimi Optimize Et");
+      optBtn.style.marginTop = "14px";
+      if (aiQueue._activeTask && aiQueue._activeTask.tab === "beceriler") {
+        optBtn.innerHTML = '<span class="thinking">AI düşünüyor… <span class="ai-sec"></span></span>'; optBtn.disabled = true; aiTimer(optBtn);
+      }
+      optBtn.onclick = async () => {
+        optBtn.innerHTML = '<span class="thinking">AI düşünüyor… <span class="ai-sec">0s</span></span>'; const _t = aiTimer(optBtn);
+        try {
+          await aiQueue.run(async () => {
+            const prompt = `ROL: Sen, ATS (Applicant Tracking System) algoritmalarını ve Türkiye iş piyasasını derinlemesine bilen bir İK teknoloji uzmanısın.
+
+GÖREV: "${appState.profile.hedefPozisyon || "mühendislik stajı"}" pozisyonu için adayın mevcut beceri setini analiz et ve eksikleri tespit et.
+
+ANALİZ ADIMLARI:
+1. Hedef pozisyon için kritik olan teknik becerileri belirle (ATS anahtar kelimeleri).
+2. Adayın mevcut becerilerini hedef pozisyonla karşılaştır.
+3. Eksik olan ve CV'ye eklenmesi halinde ATS skorunu en çok artıracak becerileri öner.
+4. Mevcut becerilerdeki güçlü yanları ve stratejik avantajları belirt.
+
+ÖNERİ KURALLARI:
+- 5-8 adet eksik kritik beceri öner.
+- Her öneri hedef pozisyonla doğrudan ilgili olsun — genel veya alakasız beceri önerme.
+- Becerileri öncelik sırasına göre listele (en kritik olan ilk sırada).
+- Adayda zaten var olan becerileri tekrar önerme.
+- "Genel bilgi", "temel beceriler" gibi belirsiz öneriler yapma.
+
+SADECE JSON döndür: {"eksikler":["Beceri1","Beceri2"],"aciklamalar":{"Beceri1":"Neden gerekli...","Beceri2":"Neden gerekli..."},"oneri":"Genel değerlendirme ve strateji özeti (2-3 cümle)","guclu_yanlar":"Adayın mevcut beceri setindeki stratejik avantajlar (1-2 cümle)"}
+
+Hedef Pozisyon: ${appState.profile.hedefPozisyon || "mühendislik stajı"}
+Mevcut Beceriler: ${JSON.stringify(appState.beceriler)}
+Deneyim Alanları: ${appState.deneyim.map(d => d.pozisyon).filter(Boolean).join(", ")}
+Projeler: ${appState.projeler.map(p => p.ad + " (" + p.teknolojiler.join(",") + ")").join("; ")}`;
+            const out = await ollamaChat([{ role: "user", content: prompt }], { json: true });
+            const parsed = extractJSON(out);
+            const box = el("div"); box.style.cssText = "margin-top:12px;padding:14px;background:rgba(232,184,75,.08);border-radius:8px;border-left:3px solid var(--accent)";
+            let html = `<b style="color:var(--accent)">AI Önerisi:</b><br>${esc(parsed.oneri || "")}`;
+            if (parsed.guclu_yanlar) html += `<br><br><b style="color:var(--good)">Güçlü Yanlar:</b><br>${esc(parsed.guclu_yanlar)}`;
+            html += `<br><br><b>Eksik kritik beceriler:</b><br>`;
+            (parsed.eksikler || []).forEach(e => {
+              html += `<div style="margin:6px 0"><span class="chip" style="margin:3px">${esc(e)}</span>`;
+              if (parsed.aciklamalar && parsed.aciklamalar[e]) html += `<span style="font-size:11px;color:var(--muted);margin-left:6px">${esc(parsed.aciklamalar[e])}</span>`;
+              html += `</div>`;
+            });
+            box.innerHTML = html;
+            c.appendChild(box);
+            _t.stop(); optBtn.disabled = false; optBtn.textContent = "⚡ Becerilerimi Optimize Et";
+            showToast("Beceri analizi tamamlandı", "ok");
+          }, optBtn, { tab: "beceriler", label: "Beceri Opt." });
+        } catch (e) { _t.stop(); console.error(e); showToast("AI hata: " + e.message, "err"); optBtn.disabled = false; optBtn.textContent = "⚡ Becerilerimi Optimize Et"; }
+      };
+      c.appendChild(optBtn);
+    }
+
+    // ----- TAB 6: SERTİFİKALAR -----
+    function renderSertifikalar(c) {
+      c.appendChild(el("h2", "tab-title", "Sertifikalar & Belgeler"));
+      c.appendChild(el("p", "tab-sub", "PDF / JPG / PNG yükle — PDF/görsel yükle — metin çıkarılıp AI ile analiz edilir ve CV'ye eklenir."));
+
+      const dz = el("div", "dropzone");
+      dz.innerHTML = '<span class="ico">📄</span><div>Belge sürükle bırak veya tıkla</div><small style="color:var(--muted)">PDF, PNG, JPG — çoklu dosya desteklenir</small>';
+      const fi = el("input"); fi.type = "file"; fi.multiple = true; fi.accept = ".pdf,.png,.jpg,.jpeg"; fi.style.display = "none";
+      dz.onclick = () => fi.click();
+      dz.ondragover = e => { e.preventDefault(); dz.classList.add("drag"); };
+      dz.ondragleave = () => dz.classList.remove("drag");
+      dz.ondrop = async e => { e.preventDefault(); dz.classList.remove("drag"); for (const f of e.dataTransfer.files) await processCertFile(f); };
+      fi.onchange = async () => { for (const f of fi.files) await processCertFile(f); };
+      c.appendChild(dz); c.appendChild(fi);
+
+      appState.sertifikalar.forEach((s, idx) => {
+        const card = el("div", "cert-card");
+        const thumb = el("div", "cert-thumb");
+        if (s.thumbnail) thumb.innerHTML = `<img src="${s.thumbnail}">`; else thumb.textContent = s.dosyaAdi.slice(0, 12);
+        card.appendChild(thumb);
+
+        const info = el("div", "cert-info");
+
+        const adInp = el("input", "cert-input cert-title");
+        adInp.type = "text"; adInp.value = s.ad || s.dosyaAdi || ""; adInp.placeholder = "Sertifika / eğitim adı";
+        adInp.oninput = () => { s.ad = adInp.value; saveState(); renderPreview(); };
+        info.appendChild(adInp);
+
+        const metaRow = el("div", "cert-meta-row");
+        const kurumInp = el("input", "cert-input");
+        kurumInp.type = "text"; kurumInp.value = s.kurum || ""; kurumInp.placeholder = "Veren kurum";
+        kurumInp.oninput = () => { s.kurum = kurumInp.value; saveState(); renderPreview(); };
+        const tarihInp = el("input", "cert-input cert-date");
+        tarihInp.type = "text"; tarihInp.value = s.tarih || ""; tarihInp.placeholder = "Yıl";
+        tarihInp.oninput = () => { s.tarih = tarihInp.value; saveState(); renderPreview(); };
+        const katSel = el("select", "cert-input cert-cat");
+        ["Teknik", "Dil", "SoftSkill", "Kurs"].forEach(k => { const o = el("option"); o.value = k; o.textContent = k; katSel.appendChild(o); });
+        katSel.value = s.kategori || "Kurs";
+        katSel.onchange = () => { s.kategori = katSel.value; saveState(); renderActiveTab(); renderPreview(); };
+        metaRow.appendChild(kurumInp); metaRow.appendChild(tarihInp); metaRow.appendChild(katSel);
+        info.appendChild(metaRow);
+
+        const badges = el("div", "badges");
+        badges.innerHTML = `<span class="badge cat-${s.kategori || "Kurs"}">${s.kategori || "Kurs"}</span><span class="badge score">+${s.atsKatki || 0} ATS</span>`;
+        info.appendChild(badges);
+
+        if (s.ozet) {
+          const ozetDiv = el("div", "cert-summary");
+          ozetDiv.textContent = s.ozet;
+          info.appendChild(ozetDiv);
+        }
+        card.appendChild(info);
+
+        const acts = el("div", "cert-acts");
+        const del = el("button", "icon-btn del", "✕"); del.onclick = () => { appState.sertifikalar.splice(idx, 1); saveState(); renderActiveTab(); renderPreview(); };
+        acts.appendChild(del);
+        card.appendChild(acts);
+        c.appendChild(card);
+      });
+    }
+    async function extractTextFromPDF(file) {
+      for (let i = 0; i < 20 && !window.__pdfjs; i++) { await new Promise(r => setTimeout(r, 500)); }
+      if (!window.__pdfjs) throw new Error("PDF.js yüklenemedi");
+      const buf = await file.arrayBuffer();
+      const pdf = await window.__pdfjs.getDocument({ data: buf }).promise;
+      let text = "";
+      const pages = Math.min(pdf.numPages, 3);
+      for (let i = 1; i <= pages; i++) {
+        const page = await pdf.getPage(i);
+        const tc = await page.getTextContent();
+        text += tc.items.map(it => it.str).join(" ") + "\n";
+      }
+      return text.trim();
+    }
+    async function extractTextFromImage(fileOrUrl) {
+      for (let i = 0; i < 20 && !window.Tesseract; i++) { await new Promise(r => setTimeout(r, 500)); }
+      if (!window.Tesseract) throw new Error("Tesseract.js yüklenemedi — sayfayı yenileyin");
+      const { data: { text } } = await Tesseract.recognize(fileOrUrl, "tur+eng", { logger: m => console.log("[OCR]", m.status, Math.round((m.progress || 0) * 100) + "%") });
+      return text.trim();
+    }
+    function base64ToBlob(b64, mime) {
+      const bin = atob(b64), arr = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++)arr[i] = bin.charCodeAt(i);
+      return new Blob([arr], { type: mime });
+    }
+    async function processCertFile(file) {
+      if (!ollamaOnline) { showToast("Ollama bağlı değil", "err"); return; }
+      const _toast = el("div", "toast info"); _toast.innerHTML = 'Metin çıkarılıyor… <span class="ai-sec">0s</span>';
+      document.getElementById("toast-stack").appendChild(_toast);
+      const _t = aiTimer(_toast);
+      try {
+        let thumb = "";
+        let docText = "";
+        if (file.type === "application/pdf") {
+          const b64 = await pdfFirstPageBase64(file);
+          thumb = "data:image/jpeg;base64," + b64;
+          docText = await extractTextFromPDF(file);
+          // Taranmış PDF — metin katmanı yoksa OCR fallback
+          if (!docText || docText.length < 5) {
+            _toast.innerHTML = 'Taranmış PDF — OCR çalışıyor… <span class="ai-sec">0s</span>';
+            const blob = base64ToBlob(b64, "image/jpeg");
+            docText = await extractTextFromImage(blob);
+          }
+        } else {
+          const b64 = await fileToBase64(file);
+          thumb = "data:image/jpeg;base64," + b64;
+          _toast.innerHTML = 'OCR ile metin çıkarılıyor… <span class="ai-sec">0s</span>';
+          docText = await extractTextFromImage(file);
+        }
+        if (!docText || docText.length < 5) {
+          _t.stop(); _toast.remove();
+          showToast("Belgeden metin çıkarılamadı — daha net bir görsel deneyin", "err"); return;
+        }
+        // Metin temizleme: TCPDF boilerplate, sertifika kodları, tekrar eden satırlar
+        docText = docText.replace(/Powered by TCPDF.*$/gm, "").replace(/www\.tcpdf\.org/g, "").replace(/Sertifika (Kodu|No):.*$/gm, "").trim();
+        const lines = docText.split("\n").map(l => l.trim()).filter(l => l.length > 3);
+        const seen = new Set(); const unique = [];
+        for (const l of lines) { if (!seen.has(l)) { seen.add(l); unique.push(l); } }
+        docText = unique.join("\n");
+        // Dosya adını temizle: uzantı, alt çizgi, sayısal kodlar, "Sertifika" kelimesi
+        const cleanName = file.name.replace(/\.[^.]+$/, "").replace(/[_-]+/g, " ").replace(/\s*\d{5,}\s*/g, " ").replace(/\s*\(\d+\)\s*/g, "").replace(/\bSertifika\b/gi, "").replace(/\s+/g, " ").trim();
+        console.log("[Cert] Çıkarılan metin (" + docText.length + " karakter):", docText.slice(0, 300));
+        _toast.innerHTML = 'AI analiz ediyor… <span class="ai-sec">0s</span>';
+        const sysPrompt = `Sertifika belgesinden bilgi çıkar ve JSON döndür.
+
+Alanlar:
+- belge_adi: Eğitimin veya sertifikanın kısa, düzgün adı. "Sertifika" kelimesini ekleme. Dosya adını olduğu gibi kopyalama, sadece eğitim/kurs adını yaz.
+- veren_kurum: Sertifikayı veren kurum/platform adı. SADECE metinde açıkça yazıyorsa doldur. Metinde kurum adı geçmiyorsa "" (boş string) yaz. Kişi adı yazma.
+- tarih: Sadece yıl (ör: "2024"). Yoksa "" yaz.
+- gecerlilik: Geçerlilik süresi varsa yaz, yoksa "" yaz.
+- kategori: "Teknik", "Dil", "SoftSkill" veya "Kurs".
+- cv_ozeti: Bu eğitimle ilgili 1 cümlelik profesyonel CV özeti. Eğitimin konusuna özel yaz, genel kalıp cümle kullanma.
+- ats_puan_katkisi: 1-10 arası sayı.
+- cv_bolumu: "sertifikalar", "beceriler" veya "diller".
+
+Sadece JSON döndür.`;
+        const out = await aiQueue.run(async () => {
+          return await ollamaChat([{ role: "system", content: sysPrompt }, { role: "user", content: "Dosya adı ipucu: " + cleanName + "\n\nBelge metni:\n" + docText.slice(0, 3000) }], { json: true, think: false, options: { num_predict: 384, temperature: 0.2 } });
+        }, null, { tab: "sertifikalar", label: "Sertifika" });
+        const parsed = extractJSON(out);
+        appState.sertifikalar.push({
+          dosyaAdi: file.name,
+          thumbnail: thumb,
+          ad: parsed.belge_adi || file.name,
+          kurum: parsed.veren_kurum || "",
+          tarih: parsed.tarih || "",
+          gecerlilik: parsed.gecerlilik || "",
+          kategori: parsed.kategori || "Kurs",
+          ozet: parsed.cv_ozeti || "",
+          atsKatki: parsed.ats_puan_katkisi || 5,
+          cvBolumu: parsed.cv_bolumu || "sertifikalar"
+        });
+        _t.stop(); _toast.remove();
+        showToast(`"${parsed.belge_adi || file.name}" eklendi ✓`, "ok");
+        saveState(); renderActiveTab();
+      } catch (e) { _t.stop(); _toast.remove(); console.error(e); showToast("Analiz hatası: " + e.message, "err"); }
+    }
+    function autoAddCertToCv(s) {
+      if (s.kategori === "Dil") {
+        appState.beceriler.diller.push({ dil: s.ad.includes("IELTS") || s.ad.includes("İngilizce") ? "İngilizce" : s.ad.includes("Almanca") ? "Almanca" : "İngilizce", seviye: "C1", sinav: s.ad + (s.tarih ? " (" + s.tarih + ")" : "") });
+        showToast("Dil sekmesine eklendi", "ok");
+      } else if (s.kategori === "Teknik") {
+        appState.beceriler.yazilim.push(s.ad);
+        showToast("Teknik beceri olarak eklendi", "ok");
+      } else {
+        showToast("Sertifika kartı CV'de görünecek", "ok");
+      }
+      saveState(); renderActiveTab();
+    }
+
+    // ----- TAB 7: GÖNÜLLÜLÜK -----
+    function renderGonulluluk(c) {
+      c.appendChild(el("h2", "tab-title", "Gönüllülük & Aktiviteler"));
+      c.appendChild(el("p", "tab-sub", "Liderlik ve takım deneyimlerini ekle. AI bunları profesyonel dile dönüştürür."));
+      appState.gonulluluk.forEach((g, idx) => {
+        const card = el("div", "card");
+        const h = el("div", "card-h"); h.appendChild(el("h3", null, `Aktivite #${idx + 1}`));
+        const acts = el("div", "card-actions");
+        const del = el("button", "icon-btn del", "✕"); del.onclick = () => { appState.gonulluluk.splice(idx, 1); saveState(); renderActiveTab(); };
+        acts.appendChild(del); h.appendChild(acts); card.appendChild(h);
+
+        card.appendChild(field("Organizasyon Türü", createSearchableDropdown({ items: GONULLU_TIPLERI, value: g.tip, allowCustom: true, placeholder: "Tür seç...", onChange: v => { g.tip = v; saveState(); } })));
+
+        const rolSel = el("select");["Üye", "Yönetim Kurulu", "Başkan", "Başkan Yardımcısı", "Koordinatör", "Gönüllü", "Eğitmen", "Mentör"].forEach(r => { const o = el("option"); o.value = r; o.textContent = r; rolSel.appendChild(o); }); rolSel.value = g.rol || "Üye"; rolSel.onchange = () => { g.rol = rolSel.value; saveState(); };
+        card.appendChild(field("Rol", rolSel));
+
+        const tr = el("div", "field-row");
+        const tw1 = el("div", "field"); tw1.appendChild(el("label", null, "Başlangıç"));
+        tw1.appendChild(createMonthYearPicker({ ay: g.basAy, yil: g.basYil }, v => { g.basAy = v.ay; g.basYil = v.yil; saveState(); }));
+        tr.appendChild(tw1);
+        const tw2 = el("div", "field"); tw2.appendChild(el("label", null, "Bitiş"));
+        tw2.appendChild(createMonthYearPicker({ ay: g.bitAy, yil: g.bitYil }, v => { g.bitAy = v.ay; g.bitYil = v.yil; saveState(); }));
+        tr.appendChild(tw2);
+        card.appendChild(tr);
+
+        card.appendChild(field("Aktiviteler", createChipGroup(GONULLU_AKTIVITELER, g.aktiviteler, v => { g.aktiviteler = v; saveState(); }, { allowAdd: true })));
+        card.appendChild(field("Ham Açıklama (opsiyonel)", textarea(g.ham, v => { g.ham = v; saveState(); })));
+
+        const aiBtn = el("button", "btn ai", "⚡ Liderlik Dilinde Yeniden Yaz");
+        if (aiQueue._activeTask && aiQueue._activeTask.tab === "gonulluluk" && aiQueue._activeTask.idx === idx) {
+          aiBtn.innerHTML = '<span class="thinking">AI düşünüyor… <span class="ai-sec"></span></span>'; aiBtn.disabled = true; aiTimer(aiBtn);
+        }
+        aiBtn.onclick = async () => {
+          aiBtn.innerHTML = '<span class="thinking">AI düşünüyor… <span class="ai-sec">0s</span></span>'; const _t = aiTimer(aiBtn);
+          try {
+            await aiQueue.run(async () => {
+              const prompt = `ROL: Sen, gönüllülük ve liderlik deneyimlerini CV için optimize etmekte uzman bir kariyer koçusun. Soft skill'lerin nasıl profesyonel dile çevrileceğini biliyorsun.
+
+GÖREV: Aşağıdaki gönüllülük/aktivite deneyimini liderlik, iletişim ve organizasyon becerilerini vurgulayan güçlü CV bullet point'lerine dönüştür.
+
+YAPISAL KURALLAR:
+- 2-4 adet bullet point yaz.
+- Her bullet şu formüle uysun: [Liderlik/Organizasyon Fiili] + [Ne Yapıldı] + [Kapsam/Ölçek] + [Sonuç/Etki]
+- Aksiyon fiilleri havuzu: Liderlik Etti, Koordine Etti, Organize Etti, Yönetti, Mentorluk Yaptı, Temsil Etti, Başlattı, Geliştirdi, Eğitim Verdi, Moderasyon Yaptı, Strateji Belirledi.
+- Her bullet'ta farklı bir aksiyon fiili kullan.
+
+LİDERLİK VE SOFT SKİLL VURGULAMA:
+- Rol bazlı vurgulama yap:
+  * "Başkan/Başkan Yardımcısı": Stratejik karar alma, ekip yönetimi, vizyon belirleme
+  * "Koordinatör": Proje yönetimi, paydaş iletişimi, zaman planlaması
+  * "Üye/Gönüllü": İnisiyatif alma, takım çalışması, sorumluluk üstlenme
+  * "Eğitmen/Mentör": Bilgi aktarımı, sunum becerileri, empati
+- Mümkünse sayısal ölçek ekle (kaç kişilik ekip, kaç etkinlik, kaç katılımcı).
+- Transferable skill'leri vurgula (proje yönetimi, bütçe yönetimi, kriz yönetimi vb.)
+
+YASAKLAR:
+- "Aktif üye olarak görev yaptı" gibi anlamsız, içi boş ifadeler yazma.
+- Adayın belirtmediği rolleri veya başarıları icat etme.
+- Sadece Türkçe yaz.
+
+SADECE JSON döndür: {"bullets":["..."]}
+
+Organizasyon Türü: ${g.tip}
+Rol: ${g.rol}
+Aktiviteler: ${(g.aktiviteler || []).join(", ")}
+Notlar: ${g.ham || "Genel gönüllülük faaliyetleri"}`;
+              const out = await ollamaChat([{ role: "user", content: prompt }], { json: true });
+              const parsed = extractJSON(out);
+              g.aiBullets = parsed.bullets || [];
+              _t.stop(); showToast("Bullet oluşturuldu", "ok");
+              saveState(); renderActiveTab();
+            }, aiBtn, { tab: "gonulluluk", idx: idx, label: "Gönüllülük" });
+          } catch (e) { _t.stop(); console.error(e); showToast("AI hata: " + e.message, "err"); aiBtn.disabled = false; aiBtn.textContent = "⚡ Liderlik Dilinde Yeniden Yaz"; }
+        };
+        card.appendChild(aiBtn);
+
+        if (g.aiBullets && g.aiBullets.length) {
+          const ul = el("ul"); ul.style.cssText = "margin-top:12px;padding-left:18px";
+          g.aiBullets.forEach(b => { const li = el("li", null, b); li.style.cssText = "font-size:12px;color:var(--good);margin-bottom:4px"; ul.appendChild(li); });
+          card.appendChild(ul);
+        }
+        c.appendChild(card);
+      });
+      const add = el("button", "add-card", "+ Aktivite Ekle");
+      add.onclick = () => { appState.gonulluluk.push({ tip: "", rol: "Üye", basAy: "", basYil: "", bitAy: "", bitYil: "", aktiviteler: [], ham: "", aiBullets: [] }); saveState(); renderActiveTab(); };
+      c.appendChild(add);
+    }
+
+    // ----- TAB 8: ÖZET -----
+    function renderOzet(c) {
+      c.appendChild(el("h2", "tab-title", "Profesyonel Özet"));
+      c.appendChild(el("p", "tab-sub", "Tamamen AI üretir. TR + EN paralel + 3 tone varyasyonu."));
+
+      const genBtn = el("button", "btn ai", "⚡ Özet Üret (TR + EN)");
+      genBtn.onclick = () => generateSummary(c, "varsayilan");
+      c.appendChild(genBtn);
+
+      const variantBox = el("div"); variantBox.id = "summary-variants"; variantBox.style.marginTop = "20px";
+      c.appendChild(variantBox);
+      if (aiQueue._activeTask && aiQueue._activeTask.tab === "ozet") {
+        variantBox.innerHTML = '<div class="thinking">AI özet üretiyor… <span class="ai-sec"></span></div>';
+        aiTimer(variantBox);
+      } else {
+        renderSummaryVariants();
+      }
+    }
+    function renderSummaryVariants() {
+      const box = document.getElementById("summary-variants");
+      if (!box) return;
+      box.innerHTML = "";
+      if (appState.ozet.tr || appState.ozet.en) {
+        const grid = el("div", "summary-grid");
+        const trBox = el("div", "summary-variant");
+        trBox.innerHTML = `<h4>🇹🇷 Türkçe</h4><p>${appState.ozet.tr || "—"}</p>`;
+        const useT = el("button", "btn primary", "Bu Versiyonu Kullan"); useT.onclick = () => { showToast("Türkçe özet aktif", "ok"); saveState(); };
+        trBox.appendChild(useT);
+        grid.appendChild(trBox);
+        const enBox = el("div", "summary-variant");
+        enBox.innerHTML = `<h4>🇬🇧 English</h4><p>${appState.ozet.en || "—"}</p>`;
+        const useE = el("button", "btn primary", "Use This Version"); useE.onclick = () => { showToast("English summary active", "ok"); saveState(); };
+        enBox.appendChild(useE);
+        grid.appendChild(enBox);
+        box.appendChild(grid);
+
+        const tones = el("div"); tones.style.cssText = "display:flex;gap:8px;margin-bottom:14px";
+        ["Daha Agresif", "Daha Mütevazı", "Teknik Odaklı"].forEach(t => {
+          const b = el("button", "btn ai", t);
+          b.onclick = () => generateSummary(null, t);
+          tones.appendChild(b);
+        });
+        box.appendChild(tones);
+
+        Object.entries(appState.ozet.varyantlar || {}).forEach(([tone, obj]) => {
+          const v = el("div", "summary-variant");
+          v.innerHTML = `<h4>${tone}</h4><p><b>TR:</b> ${obj.tr || ""}</p><p><b>EN:</b> ${obj.en || ""}</p>`;
+          const apply = el("button", "btn primary", "Bu Versiyonu Kullan"); apply.onclick = () => { appState.ozet.tr = obj.tr; appState.ozet.en = obj.en; showToast("Versiyon uygulandı", "ok"); saveState(); renderActiveTab(); };
+          v.appendChild(apply);
+          box.appendChild(v);
+        });
+      }
+    }
+    async function generateSummary(c, tone) {
+      const target = document.getElementById("summary-variants");
+      target.innerHTML = '<div class="thinking">AI özet üretiyor… <span class="ai-sec">0s</span></div>';
+      const _t = aiTimer(target);
+      try {
+        await aiQueue.run(async () => {
+          const prompt = `ROL: Sen, kendi CV'sinin profesyonel özetini yazan bir üniversite öğrencisisin. Doğal, özgüvenli, abartısız bir ses tonunda yazıyorsun. Asla 3. tekil şahıs kullanmıyorsun — her cümle "ben" öznesini taşıyor (açık ya da çekim yoluyla). Kendinden "aday" veya "bir öğrenci" diye bahsetmiyorsun; doğrudan kendi ağzından konuşuyorsun.
+
+GÖREV: Aşağıdaki profil için ${tone === "varsayilan" ? "profesyonel, kendinden emin ve etkileyici" : tone + " tonda"} bir profesyonel özet üret. Hem Türkçe hem İngilizce ver. HER İKİ DİL DE BİRİNCİ TEKİL ŞAHISLA yazılacak: Türkçede "öğrencisiyim", "geliştirdim", "hedefliyorum"; İngilizcede "I am", "I have", "I focus on" gibi.
+
+HEDEF POZİSYON: ${appState.profile.hedefPozisyon || "mühendislik stajı"}
+
+YAPI (her dil için 3-5 cümle, tamamı birinci tekil):
+1. KİMLİK CÜMLESİ: Eğitim seviyeni, bölümünü ve üniversiteni söyle. Doğrudan ve net.
+   Örnek TR: "Balıkesir Üniversitesi Elektrik-Elektronik Mühendisliği son sınıf öğrencisiyim."
+   Örnek EN: "I am a final-year Electrical-Electronics Engineering student at Balıkesir University."
+
+2. TEKNİK UZMANLIK CÜMLESİ: En güçlü 3-5 teknik yetkinliğini, spesifik araç ve platform isimleriyle anlat.
+   - Deneyim, proje teknolojileri ve beceri listesinden sentezle.
+   - Somut isim kullan (ör: "gömülü sistem geliştirdim" değil "STM32 ve FreeRTOS üzerinde gömülü sistemler geliştirdim").
+   - Birinci tekil fiil çekimiyle yaz: "geliştirdim", "çalıştım", "kullandım".
+
+3. BAŞARI/DENEYİM CÜMLESİ: Staj deneyimlerinden, projelerinden veya sertifikalarından 1-2 somut başarıyı paylaş.
+   - Sertifika varsa kendi dilinle entegre et: "Siemens PLC sertifikasıyla desteklenen otomasyon bilgime güveniyorum".
+   - Gönüllülük güçlüyse liderlik boyutunu "...liderlik ettim / koordine ettim" diye aktar.
+
+4. MOTİVASYON CÜMLESİ: Hedef pozisyona yönelik katma değerini birinci tekil kapanışla ver.
+   Örnek: "Hedeflediğim gömülü yazılım pozisyonunda donanım-yazılım arası köprü kurmak istiyorum."
+
+KRİTİK KURALLAR:
+- 3. TEKİL ŞAHIS ASLA KULLANMA. "Aday", "bir öğrenci olarak kendisi", "XYZ adlı kişi" yasak. Her cümle "ben" öznesiyle (açık ya da çekim yoluyla).
+- ENGLISH MUST ALSO BE FIRST-PERSON: "I am…", "I have…", "I focus on…", "I worked on…". Do NOT use "the candidate", "this student", or passive 3rd-person phrasing.
+- KLIŞE YASAKLARI: Şu ifadeleri ASLA kullanma: "hızlı öğrenen", "takım oyuncusu", "motivasyonu yüksek", "tutkulu", "dinamik", "kendini geliştirmeye açık", "problem çözme becerisine sahip". Yerine SOMUT yetkinlikler ve deneyimler yaz.
+- Her cümle yeni bilgi taşısın. Dolgu cümle veya tekrar yasak.
+- İngilizce çeviri birebir tercüme olmasın — İngilizce iş dünyasının doğal diline uygun, yine birinci tekil akışta.
+- Profilinde olmayan bilgiyi icat etme.
+
+SADECE JSON döndür: {"tr":"...","en":"..."}
+
+Profil: ${JSON.stringify({ profile: appState.profile, egitim: appState.egitim, deneyim: appState.deneyim.map(d => ({ sirket: d.sirket, pozisyon: d.pozisyon, bullets: d.bullets })), projeler: appState.projeler.map(p => ({ ad: p.ad, teknolojiler: p.teknolojiler, aiAciklama: p.aiAciklama })), beceriler: appState.beceriler, sertifikalar: appState.sertifikalar.map(s => ({ ad: s.ad, kurum: s.kurum, kategori: s.kategori })), gonulluluk: appState.gonulluluk.map(g => ({ tip: g.tip, rol: g.rol, aiBullets: g.aiBullets })) })}`;
+          const out = await ollamaChat([{ role: "user", content: prompt }], { json: true });
+          const parsed = extractJSON(out);
+          if (tone === "varsayilan") {
+            appState.ozet.tr = parsed.tr || "";
+            appState.ozet.en = parsed.en || "";
+          } else {
+            appState.ozet.varyantlar = appState.ozet.varyantlar || {};
+            appState.ozet.varyantlar[tone] = { tr: parsed.tr, en: parsed.en };
+          }
+          _t.stop(); showToast("Özet oluşturuldu", "ok");
+          saveState(); renderActiveTab();
+        }, null, { tab: "ozet", label: "Özet" });
+      } catch (e) { _t.stop(); console.error(e); showToast("AI hata: " + e.message, "err"); renderActiveTab(); }
+    }
+
+    // =================== ATS SCORING ===================
+    function recalcAtsScore() {
+      let s = 0; const issues = [];
+      const p = appState.profile;
+
+      // 1. İletişim & Profil (20 Puan)
+      if (p.ad && p.soyad) s += 2; else issues.push("Ad ve soyad eksik");
+      if (p.email) s += 4; else issues.push("E-posta adresi eksik");
+      if (p.phone) s += 4; else issues.push("Telefon numarası eksik");
+      if (p.sehir) s += 2; else issues.push("Lokasyon (Şehir) eksik");
+      if (p.linkedin) s += 4; else issues.push("LinkedIn profili eklenmeli");
+      if (p.github || p.portfolio) s += 4; else issues.push("GitHub veya Portfolyo linki önerilir");
+
+      // 2. Hedef & Özet (15 Puan)
+      if (p.hedefPozisyon && p.hedefPozisyon.length) s += 5; else issues.push("Hedef pozisyon başlığı eksik");
+      const ozet = appState.ozet.tr || appState.ozet.en || "";
+      if (ozet.length > 100) s += 10;
+      else if (ozet.length > 0) { s += 5; issues.push("Profesyonel özet çok kısa (en az 2-3 cümle olmalı)"); }
+      else issues.push("Profesyonel özet (Hakkımda) boş");
+
+      // 3. Deneyim (30 Puan)
+      if (appState.deneyim.length > 0) {
+        s += 10;
+        let totalBullets = 0;
+        let hasDates = true;
+        appState.deneyim.forEach(d => {
+          if (d.bullets && d.bullets.length) totalBullets += d.bullets.length;
+          else if (d.gorevChips && d.gorevChips.length) totalBullets += d.gorevChips.length;
+          if (!d.basYil) hasDates = false;
+        });
+
+        if (totalBullets >= 6) s += 15;
+        else if (totalBullets >= 3) { s += 8; issues.push("Deneyimlerdeki madde imleri (Başarılar) artırılmalı"); }
+        else issues.push("Deneyimlere görev tanımı / başarı eklenmemiş");
+
+        if (hasDates) s += 5; else issues.push("Deneyim tarihlerinde eksiklik var");
+      } else {
+        issues.push("En az 1 iş/staj deneyimi eklenmeli");
+      }
+
+      // 4. Eğitim (10 Puan)
+      if (appState.egitim.length > 0) {
+        s += 6;
+        let hasGpa = false, hasCourse = false;
+        appState.egitim.forEach(e => {
+          if (e.gpa) hasGpa = true;
+          if (e.dersler && e.dersler.length > 0) hasCourse = true;
+        });
+        if (hasGpa) s += 2; else issues.push("Eğitim sekmesine GPA eklenebilir");
+        if (hasCourse) s += 2; else issues.push("Eğitim sekmesine önemli dersler eklenebilir");
+      } else {
+        issues.push("Eğitim bilgisi eksik");
+      }
+
+      // 5. Beceriler & Ekstralar (25 Puan)
+      let teknikSay = 0;
+      Object.entries(appState.beceriler).forEach(([k, v]) => {
+        if (k !== "diller" && k !== "soft") teknikSay += v.length;
+      });
+      if (teknikSay >= 10) s += 10;
+      else if (teknikSay >= 5) { s += 5; issues.push("Daha fazla teknik yetenek (Hard Skill) eklenmeli"); }
+      else issues.push("Teknik beceri yetersiz (Anahtar kelimeler ATS için kritik)");
+
+      if (appState.beceriler.soft.length >= 3) s += 5;
+      else issues.push("Kişisel / Sosyal beceriler (Soft Skills) eklenmeli");
+
+      if (appState.beceriler.diller.length > 0) s += 5;
+      else issues.push("Yabancı dil eklenmeli");
+
+      if (appState.projeler.length > 0 || appState.sertifikalar.length > 0 || appState.gonulluluk.length > 0) s += 5;
+      else issues.push("Proje, Sertifika veya Gönüllülük bölümlerine girdi yapılmalı");
+
+      // Cap: iletişim bilgisi eksikliği skoru sınırlar
+      if (!p.email || !p.phone) {
+        s = Math.min(s, 75);
+        issues.push("İletişim bilgisi (E-posta/Telefon) eksikliği skoru sınırlandırıyor");
+      }
+
+      s = Math.max(0, Math.min(100, s));
+      animateAtsTo(s);
+      return { score: s, issues };
+    }
+    function animateAtsTo(target) {
+      const numEl = document.getElementById("ats-num");
+      const txtEl = document.getElementById("ats-text");
+      const circle = document.getElementById("ats-circle");
+      const cur = parseInt(numEl.textContent) || 0;
+      const start = performance.now(); const dur = 600;
+      function step(t) {
+        const k = Math.min(1, (t - start) / dur);
+        const eased = 1 - Math.pow(1 - k, 3);
+        const val = Math.round(cur + (target - cur) * eased);
+        numEl.textContent = val;
+        const C = 2 * Math.PI * 19;
+        circle.style.strokeDashoffset = C * (1 - val / 100);
+        let color = "var(--bad)"; let label = "Zayıf";
+        if (val >= 80) { color = "var(--good)"; label = "Mükemmel"; }
+        else if (val >= 60) { color = "var(--warn)"; label = "Orta"; }
+        circle.style.stroke = color;
+        txtEl.textContent = label;
+        if (k < 1) requestAnimationFrame(step);
+      }
+      requestAnimationFrame(step);
+    }
+
+    // =================== PREVIEW ===================
+    function renderPreview() {
+      const lang = appState.meta.lang || "tr";
+      const cssLang = lang === "en" ? "en" : "tr";
+      const cols = document.getElementById("tpl-cols")?.value || "1";
+      const cv = document.getElementById("cv-preview");
+      cv.className = "cv-paper " + (cssLang === "tr" ? "tr-template" : "en-template") + (cols === "2" ? " two-col" : "");
+      cv.style.setProperty("--cv-accent", document.getElementById("tpl-color")?.value || "#e8b84b");
+      cv.style.setProperty("--cv-font", document.getElementById("tpl-font")?.value || "DM Sans");
+      const p = appState.profile;
+      if (!p.ad && !p.soyad) { cv.innerHTML = '<div class="cv-empty">Profil bilgilerini doldurmaya başlayın — CV burada anlık olarak oluşacak.</div>'; return; }
+      const T = lang === "tr" ? { egitim: "EĞİTİM", deneyim: "DENEYİM", projeler: "PROJELER", beceriler: "BECERİLER", sertifikalar: "SERTİFİKALAR", gonulluluk: "GÖNÜLLÜLÜK & LİDERLİK", ozet: "PROFESYONEL ÖZET", diller: "DİLLER", soft: "SOFT SKİLLS", mevcut: "Devam ediyor", gpa: "GPA" } : lang === "en" ? { egitim: "EDUCATION", deneyim: "EXPERIENCE", projeler: "PROJECTS", beceriler: "SKILLS", sertifikalar: "CERTIFICATIONS", gonulluluk: "VOLUNTEERING & LEADERSHIP", ozet: "PROFESSIONAL SUMMARY", diller: "LANGUAGES", soft: "SOFT SKILLS", mevcut: "Present", gpa: "GPA" } : { egitim: "EĞİTİM / EDUCATION", deneyim: "DENEYİM / EXPERIENCE", projeler: "PROJELER / PROJECTS", beceriler: "BECERİLER / SKILLS", sertifikalar: "SERTİFİKALAR / CERTIFICATIONS", gonulluluk: "GÖNÜLLÜLÜK / VOLUNTEERING", ozet: "PROFESYONEL ÖZET / SUMMARY", diller: "DİLLER / LANGUAGES", soft: "SOFT SKİLLS", mevcut: "Devam ediyor / Present", gpa: "GPA" };
+
+      let html = `<div class="cv-name">${esc(p.ad)} ${esc(p.soyad)}</div>`;
+      if (p.hedefPozisyon) {
+        const pos = Array.isArray(p.hedefPozisyon) ? p.hedefPozisyon.join(" · ") : p.hedefPozisyon;
+        html += `<div class="cv-target">${esc(pos)}</div>`;
+      }
+      const contacts = [];
+      if (p.email) contacts.push(`✉ ${esc(p.email)}`);
+      if (p.phone) contacts.push(`📞 ${esc(p.phoneCC)} ${esc(p.phone)}`);
+      if (p.sehir) contacts.push(`📍 ${esc(p.sehir)}, ${esc(p.ulke)}`);
+      if (p.linkedin) contacts.push(`🔗 ${esc(p.linkedin)}`);
+      if (p.github) contacts.push(`⌥ ${esc(p.github)}`);
+      if (p.portfolio) contacts.push(`🌐 ${esc(p.portfolio)}`);
+      html += `<div class="cv-contacts">${contacts.map(x => `<span>${x}</span>`).join("")}</div>`;
+
+      const ozet = lang === "tr" ? appState.ozet.tr : appState.ozet.en;
+      if (ozet) html += `<div class="cv-section"><div class="cv-section-title">${T.ozet}</div><div class="cv-summary">${esc(ozet)}</div></div>`;
+
+      if (appState.egitim.length) {
+        html += `<div class="cv-section"><div class="cv-section-title">${T.egitim}</div><div class="cv-section-content">`;
+        appState.egitim.forEach(e => {
+          html += `<div class="cv-entry"><div class="cv-entry-h"><h4>${esc(e.universite)}</h4><div class="date">${esc(e.baslangic)} – ${esc(e.bitis)}</div></div><div class="cv-entry-sub">${esc(e.derece || "")} · ${esc(e.bolum || "")}${e.gpa ? " · " + T.gpa + ": " + esc(e.gpa) + "/4.00" : ""}</div>`;
+          if (e.dersler && e.dersler.length) html += `<div style="font-size:10.5px;color:#444;margin-top:3px"><b>${lang === "tr" ? "Önemli Dersler" : "Relevant Coursework"}:</b> ${e.dersler.map(esc).join(", ")}</div>`;
+          if (e.onurlar && e.onurlar.length) html += `<div style="font-size:10.5px;color:#444"><b>${lang === "tr" ? "Burslar / Onurlar" : "Honors"}:</b> ${e.onurlar.map(esc).join(", ")}</div>`;
+          html += `</div>`;
+        });
+        html += `</div></div>`;
+      }
+
+      if (appState.deneyim.length) {
+        html += `<div class="cv-section"><div class="cv-section-title">${T.deneyim}</div><div class="cv-section-content">`;
+        appState.deneyim.forEach(d => {
+          const dateStr = `${d.basAy ? monthName(d.basAy, lang) + " " : ""}${d.basYil || ""} – ${d.bitYil ? (d.bitAy ? monthName(d.bitAy, lang) + " " : "") + d.bitYil : T.mevcut}`;
+          html += `<div class="cv-entry"><div class="cv-entry-h"><h4>${esc(d.pozisyon || "")} · ${esc(d.sirket || "")}</h4><div class="date">${dateStr}</div></div><div class="cv-entry-sub">${esc(d.tur || "")}${d.sehir ? " · " + esc(d.sehir) : ""}</div>`;
+          if (d.bullets && d.bullets.length) { html += `<ul class="cv-bullets">`; d.bullets.forEach(b => html += `<li>${esc(b)}</li>`); html += `</ul>`; }
+          else if (d.gorevChips && d.gorevChips.length) { html += `<ul class="cv-bullets">`; d.gorevChips.forEach(b => html += `<li>${esc(b)}</li>`); html += `</ul>`; }
+          html += `</div>`;
+        });
+        html += `</div></div>`;
+      }
+
+      if (appState.projeler.length) {
+        html += `<div class="cv-section"><div class="cv-section-title">${T.projeler}</div><div class="cv-section-content">`;
+        appState.projeler.forEach(pr => {
+          html += `<div class="cv-entry"><div class="cv-entry-h"><h4>${esc(pr.ad)}</h4><div class="date">${(pr.tur || []).map(esc).join(", ")}</div></div>`;
+          if (pr.teknolojiler && pr.teknolojiler.length) html += `<div class="cv-entry-sub"><b>Tech:</b> ${pr.teknolojiler.map(esc).join(" · ")}</div>`;
+          if (pr.aiAciklama) html += `<div style="font-size:10.5px;color:#222;margin-top:3px">${esc(pr.aiAciklama)}</div>`;
+          else if (pr.hamAciklama) html += `<div style="font-size:10.5px;color:#222;margin-top:3px">${esc(pr.hamAciklama)}</div>`;
+          if (pr.githubUrl) html += `<div style="font-size:10px;color:#666">↗ ${esc(pr.githubUrl)}</div>`;
+          html += `</div>`;
+        });
+        html += `</div></div>`;
+      }
+
+      // Beceriler
+      const skillRows = [];
+      const map = {
+        programlama: "Programlama", gomulu: "Gömülü/MCU", protokoller: "Hab./Protokol",
+        eda: "Donanım/PCB", cad: "CAD/Modelleme", ide: "IDE & Araçlar", test: "Test/Simülasyon",
+        devops: "DevOps/VCS", os: "İşletim Sist.", veritabani: "Veritabanı", ofis: "Ofis/Planlama", guc: "Güç/Otomasyon"
+      };
+      const mapEn = {
+        programlama: "Programming", gomulu: "Embedded/MCU", protokoller: "Protocols",
+        eda: "Hardware/PCB", cad: "CAD/Modeling", ide: "IDEs & Tools", test: "Testing/Simulation",
+        devops: "DevOps/VCS", os: "OS/Platforms", veritabani: "Databases", ofis: "Office/Planning", guc: "Power/Automation"
+      };
+      Object.entries(appState.beceriler).forEach(([k, v]) => {
+        if (!Array.isArray(v) || !v.length || k === "diller" || k === "soft" || !map[k]) return;
+        skillRows.push([lang === "tr" ? map[k] : mapEn[k], v.join(" · ")]);
+      });
+      if (skillRows.length) {
+        html += `<div class="cv-section"><div class="cv-section-title">${T.beceriler}</div><div class="cv-skills-grid">`;
+        skillRows.forEach(([k, v]) => { html += `<div><b>${k}</b></div><div>${esc(v)}</div>`; });
+        html += `</div></div>`;
+      }
+      if (appState.beceriler.diller.length) {
+        html += `<div class="cv-section"><div class="cv-section-title">${T.diller}</div><div class="cv-skills-grid">`;
+        appState.beceriler.diller.forEach(d => html += `<div><b>${esc(d.dil)}</b></div><div>${esc(d.seviye)}${d.sinav ? " — " + esc(d.sinav) : ""}</div>`);
+        html += `</div></div>`;
+      }
+      if (appState.beceriler.soft.length) {
+        html += `<div class="cv-section"><div class="cv-section-title">${T.soft}</div><div style="font-size:10.5px">${appState.beceriler.soft.map(esc).join(" · ")}</div></div>`;
+      }
+      if (appState.sertifikalar.length) {
+        html += `<div class="cv-section"><div class="cv-section-title">${T.sertifikalar}</div><div class="cv-section-content">`;
+        appState.sertifikalar.forEach(s => { html += `<div class="cv-entry"><div class="cv-entry-h"><h4>${esc(s.ad)}</h4><div class="date">${esc(s.tarih || "")}</div></div><div class="cv-entry-sub">${esc(s.kurum || "")}</div></div>`; });
+        html += `</div></div>`;
+      }
+      if (appState.gonulluluk.length) {
+        html += `<div class="cv-section"><div class="cv-section-title">${T.gonulluluk}</div><div class="cv-section-content">`;
+        appState.gonulluluk.forEach(g => {
+          const dateStr = `${g.basYil || ""} – ${g.bitYil || T.mevcut}`;
+          html += `<div class="cv-entry"><div class="cv-entry-h"><h4>${esc(g.rol)} · ${esc(g.tip)}</h4><div class="date">${dateStr}</div></div>`;
+          if (g.aiBullets && g.aiBullets.length) { html += `<ul class="cv-bullets">`; g.aiBullets.forEach(b => html += `<li>${esc(b)}</li>`); html += `</ul>`; }
+          else if (g.aktiviteler && g.aktiviteler.length) { html += `<ul class="cv-bullets">`; g.aktiviteler.forEach(b => html += `<li>${esc(b)}</li>`); html += `</ul>`; }
+          html += `</div>`;
+        });
+        html += `</div></div>`;
+      }
+      cv.innerHTML = html;
+      applyPageBreaks();
+      paginatePreview();
+    }
+    function applyPageBreaks() {
+      const cv = document.getElementById("cv-preview");
+      if (!cv) return;
+      const m = document.createElement('div');
+      m.style.cssText = 'width:210mm;height:297mm;position:absolute;visibility:hidden;pointer-events:none';
+      document.body.appendChild(m);
+      const pageH = m.offsetHeight;
+      document.body.removeChild(m);
+      cv.querySelectorAll('.pb-spacer').forEach(s => s.remove());
+      const TOP_MARGIN = 40;
+      const BOTTOM_THRESHOLD = 110;
+      const els = cv.querySelectorAll('.cv-section-title, .cv-entry');
+      els.forEach(el => {
+        const posInCv = el.getBoundingClientRect().top - cv.getBoundingClientRect().top;
+        const posInPage = posInCv % pageH;
+        const remaining = pageH - posInPage;
+        // Alt kenar: kalan boşluk az ise sonraki sayfaya ittir + üst marj ekle
+        if (remaining < BOTTOM_THRESHOLD && posInPage > 60) {
+          const spacer = document.createElement('div');
+          spacer.className = 'pb-spacer';
+          spacer.style.height = (remaining + TOP_MARGIN) + 'px';
+          el.parentNode.insertBefore(spacer, el);
+          return;
+        }
+        // Üst kenar: element sayfa başına çok yakın düştüyse (ilk element hariç) üst marj bırak
+        if (posInPage < TOP_MARGIN && posInCv > 60) {
+          const spacer = document.createElement('div');
+          spacer.className = 'pb-spacer';
+          spacer.style.height = (TOP_MARGIN - posInPage) + 'px';
+          el.parentNode.insertBefore(spacer, el);
+        }
+      });
+    }
+    function paginatePreview() {
+      const source = document.getElementById("cv-preview");
+      const pagesDiv = document.getElementById("cv-pages");
+      if (!pagesDiv || !source) return;
+      // Measure 297mm in pixels
+      const m = document.createElement('div');
+      m.style.cssText = 'width:210mm;height:297mm;position:absolute;visibility:hidden;pointer-events:none';
+      document.body.appendChild(m);
+      const pageH = m.offsetHeight;
+      const pageW = m.offsetWidth;
+      document.body.removeChild(m);
+      // Calculate scale to fit the container
+      const container = pagesDiv.parentElement;
+      const availW = container.clientWidth - 28;
+      const scale = Math.min(0.88, Math.max(0.45, availW / pageW));
+      const extraW = pageW * (1 - scale) / 2;
+      const extraH = pageH * (1 - scale);
+      const totalH = source.scrollHeight;
+      const numPages = Math.max(1, Math.ceil(totalH / pageH));
+      pagesDiv.innerHTML = '';
+      for (let i = 0; i < numPages; i++) {
+        const frame = document.createElement('div');
+        frame.className = 'cv-page-frame';
+        frame.style.transform = `scale(${scale})`;
+        frame.style.marginLeft = `-${extraW}px`;
+        frame.style.marginRight = `-${extraW}px`;
+        frame.style.marginBottom = `${i < numPages - 1 ? -extraH + 24 : -extraH}px`;
+        const clone = source.cloneNode(true);
+        clone.removeAttribute('id');
+        clone.style.position = 'absolute';
+        clone.style.left = '0';
+        clone.style.top = (-i * pageH) + 'px';
+        clone.style.visibility = 'visible';
+        clone.style.opacity = '1';
+        clone.style.pointerEvents = 'auto';
+        clone.style.zIndex = 'auto';
+        clone.style.boxShadow = 'none';
+        frame.appendChild(clone);
+        const num = document.createElement('div');
+        num.className = 'cv-page-num';
+        num.textContent = (i + 1) + ' / ' + numPages;
+        frame.appendChild(num);
+        pagesDiv.appendChild(frame);
+      }
+    }
+    function esc(s) { return (s == null ? "" : String(s)).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
+    function monthName(n, lang) {
+      const tr = ["", "Oca", "Şub", "Mar", "Nis", "May", "Haz", "Tem", "Ağu", "Eyl", "Eki", "Kas", "Ara"];
+      const en = ["", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+      return (lang === "en" ? en : tr)[parseInt(n)] || "";
+    }
+
+    // =================== SETTINGS / MODALS ===================
+    function openModal(id) { document.getElementById(id).classList.add("open"); }
+    function closeModal(id) { document.getElementById(id).classList.remove("open"); }
+    window.closeModal = closeModal;
+
+    async function openSettings() {
+      document.getElementById("set-url").value = appState.ayarlar.ollamaUrl;
+      document.getElementById("set-lang").value = appState.meta.lang;
+      const sel = document.getElementById("set-model"); sel.innerHTML = "";
+      const models = await listOllamaModels();
+      if (!models.length) { const o = el("option"); o.value = appState.ayarlar.model; o.textContent = appState.ayarlar.model; sel.appendChild(o); }
+      models.forEach(m => { const o = el("option"); o.value = m; o.textContent = m; sel.appendChild(o); });
+      sel.value = appState.ayarlar.model;
+      openModal("modal-settings");
+    }
+
+    async function analyzeCv() {
+      if (!ollamaOnline) { showToast("Ollama bağlı değil", "err"); return; }
+      openModal("modal-analyze");
+      const body = document.getElementById("analyze-body");
+      body.innerHTML = '<div class="thinking">AI CV\'nizi analiz ediyor… <span class="ai-sec">0s</span></div>';
+      const _t = aiTimer(body);
+      try {
+        await aiQueue.run(async () => {
+          const hedefPoz = appState.profile.hedefPozisyon || "mühendislik stajı";
+          const prompt = `ROL: Sen, 10+ yıl deneyimli bir İK direktörü, ATS sistemi mimarı ve kariyer koçusun. Türkiye'deki mühendislik ve teknik pozisyonlar için işe alım süreçlerini yönetmişsin.
+
+GÖREV: Bu CV'yi "${hedefPoz}" hedef pozisyonu bağlamında kapsamlı şekilde analiz et ve puanla.
+
+PUANLAMA MATRİSİ (her kategoriyi 1-10 arası puanla):
+
+1. İÇERİK KALİTESİ (Puan: ?/10):
+   - Bullet point'lerdeki aksiyon fiilleri ne kadar güçlü? (zayıf: "yaptı/yardım etti" vs güçlü: "optimize etti/geliştirdi")
+   - Ölçülebilir sonuçlar (metrikler, rakamlar) yeterli mi?
+   - Her bullet bilgi taşıyor mu yoksa dolgu mu?
+
+2. ATS UYUMLULUK (Puan: ?/10):
+   - "${hedefPoz}" pozisyonu için kritik anahtar kelimeler mevcut mu?
+   - Sektörel terminoloji (standartlar, araçlar, protokoller) yeterli mi?
+   - Keyword density uygun mu (ne çok az ne çok fazla)?
+
+3. PROFESYONEL DİL (Puan: ?/10):
+   - Zayıf veya pasif fiiller var mı?
+   - Belirsiz ifadeler ("çeşitli", "farklı", "bazı") kullanılmış mı?
+   - Tekrar eden kalıplar veya kelimeler var mı?
+
+4. YAPI & DENGE (Puan: ?/10):
+   - Deneyim, eğitim, beceri, proje bölümleri dengeli mi?
+   - Hedef pozisyonla en alakalı deneyim öne çıkıyor mu?
+   - Eksik veya zayıf bölümler hangileri?
+
+5. STRATEJİK POZİSYONLAMA (Puan: ?/10):
+   - CV, "${hedefPoz}" pozisyonu için optimize edilmiş mi?
+   - Adayın benzersiz değer önerisi net mi?
+   - Kariyer hedefiyle deneyimler arasında tutarlılık var mı?
+
+GENEL DEĞERLENDİRME:
+- Toplam skor (50 üzerinden) ve harf notu (A/B/C/D/F) ver.
+- CV'nin en güçlü 2 yanını belirt.
+
+ÖNERİ KURALLARI:
+- Her öneri SOMUT ve UYGULANABİLİR olsun.
+- KÖTÜ: "Deneyim bölümünü geliştirin" — YASAK.
+- İYİ: "Deneyim #1'deki 2. maddede 'rapor hazırladı' yerine 'IEC 60364 standardına uygun 12 adet periyodik kontrol raporu hazırlayarak denetim sürecini hızlandırdı' yazın" — BÖYLE OLSUN.
+- 8-12 arası öneri ver.
+
+SADECE JSON döndür:
+{"puanlar":{"icerik":{"puan":0,"yorum":"..."},"ats":{"puan":0,"yorum":"..."},"dil":{"puan":0,"yorum":"..."},"yapi":{"puan":0,"yorum":"..."},"strateji":{"puan":0,"yorum":"..."}},"toplam_puan":0,"harf_notu":"?","guclu_yanlar":["...","..."],"oneriler":[{"sorun":"...","oneri":"...","oncelik":"yuksek|orta|dusuk","kategori":"icerik|ats|dil|yapi|strateji"}]}
+
+${JSON.stringify(appState).slice(0, 4000)}`;
+          const out = await ollamaChat([{ role: "user", content: prompt }], { json: true });
+          const parsed = extractJSON(out);
+          body.innerHTML = "";
+
+          // Scorecard header
+          const scoreHeader = el("div");
+          scoreHeader.style.cssText = "text-align:center;padding:16px;background:var(--bg3);border-radius:8px;margin-bottom:16px";
+          const tp = parsed.toplam_puan || 0;
+          const hn = parsed.harf_notu || "?";
+          scoreHeader.innerHTML = `<div style="font-size:32px;font-weight:700;color:var(--accent)">${tp}/50</div><div style="font-size:18px;color:var(--muted)">Harf Notu: <b>${esc(hn)}</b></div>`;
+          body.appendChild(scoreHeader);
+
+          // Category scores with progress bars
+          const categories = { icerik: "İçerik Kalitesi", ats: "ATS Uyumluluk", dil: "Profesyonel Dil", yapi: "Yapı & Denge", strateji: "Stratejik Pozisyonlama" };
+          Object.entries(parsed.puanlar || {}).forEach(([key, val]) => {
+            const row = el("div");
+            row.style.cssText = "display:flex;align-items:center;gap:12px;padding:8px;margin-bottom:4px";
+            const puan = val.puan || 0;
+            const color = puan >= 7 ? "var(--good)" : puan >= 4 ? "var(--accent)" : "var(--bad)";
+            row.innerHTML = `<div style="width:180px;font-weight:500;font-size:13px">${categories[key] || key}</div><div style="flex:1;background:var(--bg3);height:8px;border-radius:4px"><div style="width:${puan * 10}%;height:100%;background:${color};border-radius:4px;transition:width .3s"></div></div><div style="width:40px;text-align:right;font-weight:600;font-size:13px">${puan}/10</div>`;
+            body.appendChild(row);
+            if (val.yorum) {
+              const comment = el("div");
+              comment.style.cssText = "font-size:11px;color:var(--muted);margin:0 0 8px 192px";
+              comment.textContent = val.yorum;
+              body.appendChild(comment);
+            }
+          });
+
+          // Strong points
+          if (parsed.guclu_yanlar && parsed.guclu_yanlar.length) {
+            const gBox = el("div");
+            gBox.style.cssText = "margin:16px 0;padding:12px;background:rgba(95,211,138,.08);border-left:3px solid var(--good);border-radius:6px";
+            gBox.innerHTML = `<div style="font-weight:600;color:var(--good);margin-bottom:6px">Güçlü Yanlar</div>` + parsed.guclu_yanlar.map(g => `<div style="font-size:13px;margin-bottom:4px">• ${esc(g)}</div>`).join("");
+            body.appendChild(gBox);
+          }
+
+          // Recommendations
+          const recTitle = el("div"); recTitle.style.cssText = "font-weight:600;margin:16px 0 8px;font-size:14px"; recTitle.textContent = "Öneriler";
+          body.appendChild(recTitle);
+          (parsed.oneriler || []).forEach(o => {
+            const card = el("div"); card.style.cssText = "background:var(--bg3);border-left:3px solid " + (o.oncelik === "yuksek" ? "var(--bad)" : o.oncelik === "orta" ? "var(--accent)" : "var(--muted)") + ";padding:12px;border-radius:6px;margin-bottom:8px";
+            const badge = o.oncelik === "yuksek" ? "color:var(--bad)" : o.oncelik === "orta" ? "color:var(--accent)" : "color:var(--muted)";
+            card.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center"><div style="font-size:11px;${badge};font-weight:600;text-transform:uppercase">${esc(o.sorun)}</div><span style="font-size:9px;padding:2px 6px;border-radius:3px;background:var(--bg2);${badge}">${esc(o.oncelik || "orta")}</span></div><div style="font-size:13px;margin-top:6px">${esc(o.oneri)}</div>`;
+            body.appendChild(card);
+          });
+          _t.stop();
+        }, null, { tab: "_analyze", label: "CV Analiz" });
+      } catch (e) { _t.stop(); body.innerHTML = `<div style="color:var(--bad)">Hata: ${esc(e.message)}</div>`; }
+    }
+
+    // =================== INIT ===================
+    async function init() {
+      console.log("[CV] Uygulama başlatılıyor");
+      loadState();
+      renderTabs(); renderActiveTab(); renderPreview(); recalcAtsScore(); updateSaveStatus();
+
+      // Top bar buttons
+      document.getElementById("btn-settings").onclick = openSettings;
+      document.getElementById("btn-analyze").onclick = analyzeCv;
+      async function downloadPdf(lang) {
+        document.getElementById("tpl-lang").value = lang;
+        renderPreview();
+        showToast("PDF hazırlanıyor, lütfen bekleyin...", "info");
+        await document.fonts.ready;
+        await new Promise(r => setTimeout(r, 450));
+
+        const source = document.getElementById("cv-preview");
+        const wrapper = document.createElement('div');
+        wrapper.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:210mm;pointer-events:none;';
+        const clone = source.cloneNode(true);
+        clone.removeAttribute('id');
+        clone.style.position = 'relative';
+        clone.style.opacity = '1';
+        clone.style.boxShadow = 'none';
+        clone.style.pointerEvents = 'auto';
+        clone.style.zIndex = 'auto';
+        clone.style.visibility = 'visible';
+        clone.style.top = 'auto';
+        clone.style.left = 'auto';
+        wrapper.appendChild(clone);
+        document.body.appendChild(wrapper);
+
+        const filename = `CV_${appState.profile.ad ? appState.profile.ad.replace(/\s+/g, '_') : 'Isimsiz'}_${lang.toUpperCase()}.pdf`;
+        const opt = {
+          margin: [0, 0, 0, 0],
+          image: { type: 'png', quality: 1.0 },
+          html2canvas: { scale: 4, useCORS: true, backgroundColor: '#ffffff', letterRendering: true },
+          jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+          pagebreak: { mode: ['avoid-all'] }
+        };
+
+        html2pdf().set(opt).from(clone).toPdf().get('pdf').then(function(pdf) {
+          try { addTextLayer(pdf, clone); } catch (e) { console.warn('[CV] Text layer:', e); }
+          pdf.save(filename);
+          document.body.removeChild(wrapper);
+          showToast("PDF indirildi ✓", "ok");
+        }).catch(function(err) {
+          try { document.body.removeChild(wrapper); } catch(e) {}
+          console.error(err);
+          showToast("PDF oluşturulurken hata", "err");
+        });
+      }
+
+      function turkishSafe(t) {
+        return t.replace(/ğ/g,'g').replace(/Ğ/g,'G').replace(/ş/g,'s').replace(/Ş/g,'S').replace(/ı/g,'i').replace(/İ/g,'I');
+      }
+
+      function getVisualLines(textNode, containerRect) {
+        const text = textNode.textContent;
+        const range = document.createRange();
+        range.selectNodeContents(textNode);
+        const allRects = Array.from(range.getClientRects());
+        range.detach();
+        if (allRects.length === 0) return [];
+        if (allRects.length === 1) {
+          return [{ text: text, x: allRects[0].left - containerRect.left, y: allRects[0].top - containerRect.top }];
+        }
+        const lines = [];
+        const words = text.split(/(\s+)/);
+        let charOffset = 0, curText = '', curY = null, curX = null;
+        for (const word of words) {
+          if (!word) continue;
+          const mid = Math.min(charOffset + Math.floor(word.length / 2), text.length - 1);
+          const r = document.createRange();
+          r.setStart(textNode, mid);
+          r.setEnd(textNode, Math.min(mid + 1, text.length));
+          const rect = r.getBoundingClientRect();
+          r.detach();
+          if (rect.width === 0 && rect.height === 0) { curText += word; charOffset += word.length; continue; }
+          if (curY === null || Math.abs(rect.top - curY) > rect.height * 0.3) {
+            if (curText.trim()) lines.push({ text: curText, x: curX - containerRect.left, y: curY - containerRect.top });
+            curText = word; curY = rect.top; curX = rect.left;
+          } else { curText += word; }
+          charOffset += word.length;
+        }
+        if (curText.trim()) lines.push({ text: curText, x: curX - containerRect.left, y: curY - containerRect.top });
+        return lines;
+      }
+
+      function addTextLayer(pdf, element) {
+        const pdfW = 210, pdfH = 297;
+        const elRect = element.getBoundingClientRect();
+        const sc = pdfW / elRect.width;
+        pdf.setFont('Helvetica');
+        const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT);
+        while (walker.nextNode()) {
+          const node = walker.currentNode;
+          if (!node.textContent.trim()) continue;
+          const parent = node.parentElement;
+          if (!parent) continue;
+          const fsPx = parseFloat(getComputedStyle(parent).fontSize);
+          const fsMm = fsPx * sc;
+          const fsPt = fsMm / 0.352778;
+          const lines = getVisualLines(node, elRect);
+          for (const line of lines) {
+            const text = turkishSafe(line.text.trim());
+            if (!text) continue;
+            const x = line.x * sc;
+            const y = line.y * sc;
+            const pageIdx = Math.floor(y / pdfH);
+            const yInPage = y - pageIdx * pdfH + fsMm * 0.75;
+            if (pageIdx >= 0 && pageIdx < pdf.getNumberOfPages()) {
+              pdf.setPage(pageIdx + 1);
+              pdf.setFontSize(fsPt);
+              pdf.text(text, x, yInPage, { renderingMode: 'invisible' });
+            }
+          }
+        }
+      }
+
+      document.getElementById("btn-print-tr").onclick = () => downloadPdf("tr");
+        document.getElementById("btn-print-en").onclick = () => downloadPdf("en");
+
+        // Right bar
+        ["tpl-color", "tpl-font", "tpl-cols"].forEach(id => { document.getElementById(id).onchange = renderPreview; });
+        document.getElementById("tpl-lang").onchange = (e) => {
+          appState.meta.lang = e.target.value;
+          saveState();
+          renderPreview();
+          renderActiveTab();
+        };
+        document.getElementById("tpl-lang").value = appState.meta.lang || "tr";
+
+        // Settings
+        document.getElementById("set-test").onclick = async () => {
+          appState.ayarlar.ollamaUrl = document.getElementById("set-url").value;
+          const r = await checkOllama();
+          showToast(r ? "Bağlantı başarılı" : "Bağlantı başarısız", r ? "ok" : "err");
+          if (r) { const sel = document.getElementById("set-model"); sel.innerHTML = ""; r.forEach(m => { const o = el("option"); o.value = m; o.textContent = m; sel.appendChild(o); }); }
+        };
+        document.getElementById("set-model").onchange = e => { appState.ayarlar.model = e.target.value; saveState(); };
+        document.getElementById("set-lang").onchange = e => { appState.meta.lang = e.target.value; saveState(); renderPreview(); renderActiveTab(); };
+        document.getElementById("set-export").onclick = () => {
+          const blob = new Blob([JSON.stringify(appState, null, 2)], { type: "application/json" });
+          const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `cv-${Date.now()}.json`; a.click();
+          showToast("JSON dışa aktarıldı", "ok");
+        };
+        document.getElementById("set-import").onclick = () => document.getElementById("json-import-file").click();
+        document.getElementById("json-import-file").onchange = e => {
+          const f = e.target.files[0]; if (!f) return;
+          const r = new FileReader(); r.onload = () => { try { appState = mergeDeep(JSON.parse(JSON.stringify(DEFAULT_STATE)), JSON.parse(r.result)); saveState(); renderActiveTab(); renderPreview(); showToast("İçe aktarıldı ✓", "ok"); closeModal("modal-settings"); } catch (err) { showToast("Geçersiz JSON", "err"); } };
+          r.readAsText(f);
+        };
+        document.getElementById("set-reset").onclick = () => {
+          if (confirm("Tüm CV verileri silinecek. Emin misiniz?")) {
+            localStorage.removeItem(STORAGE_KEY);
+            appState = JSON.parse(JSON.stringify(DEFAULT_STATE));
+            renderActiveTab(); renderPreview(); recalcAtsScore();
+            showToast("Tüm veri sıfırlandı", "ok");
+            closeModal("modal-settings");
+          }
+        };
+
+        // Modal close on background click
+        document.querySelectorAll(".modal-bg").forEach(m => { m.onclick = e => { if (e.target === m) m.classList.remove("open"); }; });
+
+        // Ollama banner buttons
+        document.getElementById("btn-ollama-recheck").onclick = async () => {
+          showToast("Bağlantı kontrol ediliyor...", "info");
+          const r = await checkOllama();
+          showToast(r ? "Bağlantı başarılı ✓" : "Hâlâ bağlanılamıyor", r ? "ok" : "err");
+        };
+        document.getElementById("btn-ollama-diagnose").onclick = async () => {
+          showToast("Tanılama çalışıyor (30-60s sürebilir)...", "info");
+          const report = await diagnoseOllama();
+          const pre = document.getElementById("diag-output");
+          pre.textContent = report;
+          document.getElementById("modal-diag").classList.add("open");
+        };
+        document.getElementById("btn-ollama-cors").onclick = () => {
+          const cmd = `setx OLLAMA_ORIGINS "*"`;
+          navigator.clipboard.writeText(cmd).then(
+            () => showToast("Komut panoya kopyalandı. Terminalde çalıştırın ve Ollama'yı yeniden başlatın.", "ok"),
+            () => showToast("Kopyalanamadı: " + cmd, "err")
+          );
+        };
+        document.getElementById("diag-close").onclick = () => document.getElementById("modal-diag").classList.remove("open");
+        document.getElementById("diag-copy").onclick = () => {
+          const t = document.getElementById("diag-output").textContent;
+          navigator.clipboard.writeText(t).then(() => showToast("Rapor kopyalandı", "ok"));
+        };
+
+        // Ollama check
+        await checkOllama();
+        setInterval(checkOllama, 30000);
+      }
+      init();
+  </script>
+</body>
+
+</html>
